@@ -285,12 +285,12 @@ func (vdb *VersionedDB) BytesKeySupported() bool {
 func (vdb *VersionedDB) GetState(namespace string, key string) (*statedb.VersionedValue, error) {
 	logger.Debugf("GetState(). ns=%s, key=%s", namespace, key)
 	if namespace == "lscc" {
-		if value := vdb.lsccStateCache.getState(key); value != nil {
+		if value := vdb.lsccStateCache.getState(key); value != nil { //从缓存获取信息
 			return value, nil
 		}
 	}
 
-	db, err := vdb.getNamespaceDBHandle(namespace)
+	db, err := vdb.getNamespaceDBHandle(namespace) //获取数据库连接句柄
 	if err != nil {
 		return nil, err
 	}

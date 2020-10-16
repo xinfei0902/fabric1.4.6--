@@ -19,14 +19,14 @@ import (
 type lockBasedTxSimulator struct {
 	lockBasedQueryExecutor
 	rwsetBuilder              *rwsetutil.RWSetBuilder
-	writePerformed            bool
-	pvtdataQueriesPerformed   bool
-	simulationResultsComputed bool
-	paginatedQueriesPerformed bool
+	writePerformed            bool //已经写执行
+	pvtdataQueriesPerformed   bool //私有数据查询已执行
+	simulationResultsComputed bool //模拟结果完成
+	paginatedQueriesPerformed bool //分页查询
 }
 
 func newLockBasedTxSimulator(txmgr *LockBasedTxMgr, txid string) (*lockBasedTxSimulator, error) {
-	rwsetBuilder := rwsetutil.NewRWSetBuilder()
+	rwsetBuilder := rwsetutil.NewRWSetBuilder() //构建新的读写集实例（开辟接下来存放读写集空间）
 	helper := newQueryHelper(txmgr, rwsetBuilder)
 	logger.Debugf("constructing new tx simulator txid = [%s]", txid)
 	return &lockBasedTxSimulator{lockBasedQueryExecutor{helper, txid}, rwsetBuilder, false, false, false, false}, nil

@@ -363,26 +363,26 @@ func (msp *bccspmsp) DeserializeIdentity(serializedID []byte) (Identity, error) 
 
 	// We first deserialize to a SerializedIdentity to get the MSP ID
 	sId := &m.SerializedIdentity{}
-	err := proto.Unmarshal(serializedID, sId)
+	err := proto.Unmarshal(serializedID, sId) //反序列化结构 字节装结构
 	if err != nil {
 		return nil, errors.Wrap(err, "could not deserialize a SerializedIdentity")
 	}
 
-	if sId.Mspid != msp.name {
+	if sId.Mspid != msp.name { //与msp管理中MSPID 对比   这个就是配置文件所定义的 MSPID=Org1MSP
 		return nil, errors.Errorf("expected MSP ID %s, received %s", msp.name, sId.Mspid)
 	}
 
-	return msp.deserializeIdentityInternal(sId.IdBytes)
+	return msp.deserializeIdentityInternal(sId.IdBytes) //sId.IdBytes 内容是用来验证签名 pem格式证书
 }
 
 // deserializeIdentityInternal returns an identity given its byte-level representation
 func (msp *bccspmsp) deserializeIdentityInternal(serializedIdentity []byte) (Identity, error) {
 	// This MSP will always deserialize certs this way
-	bl, _ := pem.Decode(serializedIdentity)
+	bl, _ := pem.Decode(serializedIdentity) //对byte进行解码  解析出类型 内容等
 	if bl == nil {
 		return nil, errors.New("could not decode the PEM structure")
 	}
-	cert, err := x509.ParseCertificate(bl.Bytes)
+	cert, err := x509.ParseCertificate(bl.Bytes) //对byte(证书内容) 解析成认证证书
 	if err != nil {
 		return nil, errors.Wrap(err, "parseCertificate failed")
 	}
@@ -773,7 +773,7 @@ func (msp *bccspmsp) getCertificationChainIdentifierFromChain(chain []*x509.Cert
 // do have signatures in Low-S. If this is not the case, the certificate
 // is regenerated to have a Low-S signature.
 func (msp *bccspmsp) sanitizeCert(cert *x509.Certificate) (*x509.Certificate, error) {
-	if isECDSASignedCert(cert) {
+	if isECDSASignedCert(cert) { //是否是椭圆曲线算法签署证书
 		// Lookup for a parent certificate to perform the sanitization
 		var parentCert *x509.Certificate
 		chain, err := msp.getUniqueValidationChain(cert, msp.getValidityOptsForCert(cert))

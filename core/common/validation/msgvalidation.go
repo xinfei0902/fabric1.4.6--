@@ -81,31 +81,32 @@ func ValidateProposalMessage(signedProp *pb.SignedProposal) (*pb.Proposal, *comm
 	putilsLogger.Debugf("ValidateProposalMessage starts for signed proposal %p", signedProp)
 
 	// extract the Proposal message from signedProp
-	prop, err := utils.GetProposal(signedProp.ProposalBytes)
+	prop, err := utils.GetProposal(signedProp.ProposalBytes) //反序列化 从提案中获取内容
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
 	// 1) look at the ProposalHeader
-	hdr, err := utils.GetHeader(prop.Header)
+	hdr, err := utils.GetHeader(prop.Header) //获取header:{channel_header:...,signature_header:....}
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
 	// validate the header
-	chdr, shdr, err := validateCommonHeader(hdr)
+	chdr, shdr, err := validateCommonHeader(hdr) //验证header 返回通道header和 sign_header信息
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
 	// validate the signature
+	//验证签名
 	err = checkSignatureFromCreator(shdr.Creator, signedProp.Signature, signedProp.ProposalBytes, chdr.ChannelId)
 	if err != nil {
 		// log the exact message on the peer but return a generic error message to
 		// avoid malicious users scanning for channels
 		putilsLogger.Warningf("channel [%s]: %s", chdr.ChannelId, err)
 		sId := &msp.SerializedIdentity{}
-		err := proto.Unmarshal(shdr.Creator, sId)
+		err := proto.Unmarshal(shdr.Creator, sId) //验证失败将creator身份信息记录到peer节点上 防止改身份对通道操作
 		if err != nil {
 			// log the error here as well but still only return the generic error
 			err = errors.Wrap(err, "could not deserialize a SerializedIdentity")
@@ -117,6 +118,7 @@ func ValidateProposalMessage(signedProp *pb.SignedProposal) (*pb.Proposal, *comm
 	// Verify that the transaction ID has been computed properly.
 	// This check is needed to ensure that the lookup into the ledger
 	// for the same TxID catches duplicates.
+	//对交易txid进行验证 是否与计算一致
 	err = utils.CheckTxID(
 		chdr.TxId,
 		shdr.Nonce,
@@ -126,7 +128,7 @@ func ValidateProposalMessage(signedProp *pb.SignedProposal) (*pb.Proposal, *comm
 	}
 
 	// continue the validation in a way that depends on the type specified in the header
-	switch common.HeaderType(chdr.Type) {
+	switch common.HeaderType(chdr.Type) { //根据通道header中类型 选择处理
 	case common.HeaderType_CONFIG:
 		//which the types are different the validation is the same
 		//viz, validate a proposal to a chaincode. If we need other
@@ -135,7 +137,7 @@ func ValidateProposalMessage(signedProp *pb.SignedProposal) (*pb.Proposal, *comm
 		fallthrough
 	case common.HeaderType_ENDORSER_TRANSACTION:
 		// validation of the proposal message knowing it's of type CHAINCODE
-		chaincodeHdrExt, err := validateChaincodeProposalMessage(prop, hdr)
+		chaincodeHdrExt, err := validateChaincodeProposalMessage(prop, hdr) //验证链码一些信息
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -158,13 +160,13 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 		return errors.New("nil arguments")
 	}
 
-	mspObj := mspmgmt.GetIdentityDeserializer(ChainID)
+	mspObj := mspmgmt.GetIdentityDeserializer(ChainID) //根据通道名称获取msp管理 如果没有新建msp管理
 	if mspObj == nil {
 		return errors.Errorf("could not get msp for channel [%s]", ChainID)
 	}
 
 	// get the identity of the creator
-	creator, err := mspObj.DeserializeIdentity(creatorBytes)
+	creator, err := mspObj.DeserializeIdentity(creatorBytes) //对creator的身份进行查找 实现方法：fabric\msp\mspimpl.go No.361 line
 	if err != nil {
 		return errors.WithMessage(err, "MSP error")
 	}
@@ -172,7 +174,7 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 	putilsLogger.Debugf("creator is %s", creator.GetIdentifier())
 
 	// ensure that creator is a valid certificate
-	err = creator.Validate()
+	err = creator.Validate() //验证证书 实现：fabric\msp\identities.go No.93 line
 	if err != nil {
 		return errors.WithMessage(err, "creator certificate is not valid")
 	}
@@ -180,7 +182,7 @@ func checkSignatureFromCreator(creatorBytes []byte, sig []byte, msg []byte, Chai
 	putilsLogger.Debugf("creator is valid")
 
 	// validate the signature
-	err = creator.Verify(msg, sig)
+	err = creator.Verify(msg, sig) //对签名的验证 实现：fabric\msp\identities.go No.144 line
 	if err != nil {
 		return errors.WithMessage(err, "creator's signature over the proposal is not valid")
 	}
@@ -218,6 +220,7 @@ func validateChannelHeader(cHdr *common.ChannelHeader) error {
 	}
 
 	// validate the header type
+	// 判断是否包含的类型  比如背书交易、更新配置等
 	if common.HeaderType(cHdr.Type) != common.HeaderType_ENDORSER_TRANSACTION &&
 		common.HeaderType(cHdr.Type) != common.HeaderType_CONFIG_UPDATE &&
 		common.HeaderType(cHdr.Type) != common.HeaderType_CONFIG &&
@@ -248,27 +251,27 @@ func validateCommonHeader(hdr *common.Header) (*common.ChannelHeader, *common.Si
 		return nil, nil, errors.New("nil header")
 	}
 
-	chdr, err := utils.UnmarshalChannelHeader(hdr.ChannelHeader)
+	chdr, err := utils.UnmarshalChannelHeader(hdr.ChannelHeader) //反序列化header中通道信息
 	if err != nil {
 		return nil, nil, err
 	}
 
-	shdr, err := utils.GetSignatureHeader(hdr.SignatureHeader)
+	shdr, err := utils.GetSignatureHeader(hdr.SignatureHeader) //反序列化header中签署信息
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = validateChannelHeader(chdr)
+	err = validateChannelHeader(chdr) //验证通道header  提案类型是否是 背书交易、配置更新等 验证是否 epoch == 0
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = validateSignatureHeader(shdr)
+	err = validateSignatureHeader(shdr) //验证签署的header 中的创建者 和 nonce(随机24字节)不为空
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return chdr, shdr, nil
+	return chdr, shdr, nil //没有错误的话 返回每一个header中信息
 }
 
 // validateConfigTransaction validates the payload of a

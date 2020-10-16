@@ -398,10 +398,10 @@ func (cccid *CCContext) GetCanonicalName() string {
 // a proposal and whether to validate a transaction, for a particular chaincode.
 type ChaincodeDefinition interface {
 	// CCName returns the name of this chaincode (the name it was put in the ChaincodeRegistry with).
-	CCName() string
+	CCName() string //链码名称
 
 	// Hash returns the hash of the chaincode.
-	Hash() []byte
+	Hash() []byte //返回链码hash值
 
 	// CCVersion returns the version of the chaincode.
 	CCVersion() string
@@ -410,7 +410,7 @@ type ChaincodeDefinition interface {
 	// The string returned is the name of the validation method (usually 'vscc')
 	// and the bytes returned are the argument to the validation (in the case of
 	// 'vscc', this is a marshaled pb.VSCCArgs message).
-	Validation() (string, []byte)
+	Validation() (string, []byte) //返回是验证链码上提案
 
 	// Endorsement returns how to endorse proposals for this chaincode.
 	// The string returns is the name of the endorsement method (usually 'escc').

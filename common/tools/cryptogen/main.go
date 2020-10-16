@@ -222,16 +222,16 @@ func main() {
 	case gen.FullCommand():
 		generate() //工具创建证书
 
-	case ext.FullCommand():
+	case ext.FullCommand(): //扩展 在已有网络 需要新增新的组织证书 配置文件可以只填写新组织信息
 		extend()
 
 		// "showtemplate" command
-	case showtemplate.FullCommand():
+	case showtemplate.FullCommand(): //显示配置文件（crypto-config.yaml）模板
 		fmt.Print(defaultConfig)
 		os.Exit(0)
 
 		// "version" command
-	case version.FullCommand():
+	case version.FullCommand(): //显示工具（cryptogen）版本
 		printVersion()
 	}
 

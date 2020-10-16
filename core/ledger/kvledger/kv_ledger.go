@@ -343,7 +343,7 @@ func (l *kvLedger) Prune(policy commonledger.PrunePolicy) error {
 
 // NewTxSimulator returns new `ledger.TxSimulator`
 func (l *kvLedger) NewTxSimulator(txid string) (ledger.TxSimulator, error) {
-	return l.txtmgmt.NewTxSimulator(txid)
+	return l.txtmgmt.NewTxSimulator(txid) //实现：fabric\core\ledger\kvledger\txmgmt\txmgr\lockbasedtxmgr\lockbased_txmgr.go No.93 line
 }
 
 // NewQueryExecutor gives handle to a query executor.
@@ -358,7 +358,7 @@ func (l *kvLedger) NewQueryExecutor() (ledger.QueryExecutor, error) {
 // Any synchronization should be performed at the implementation level if required
 // Pass the ledger blockstore so that historical values can be looked up from the chain
 func (l *kvLedger) NewHistoryQueryExecutor() (ledger.HistoryQueryExecutor, error) {
-	return l.historyDB.NewHistoryQueryExecutor(l.blockStore)
+	return l.historyDB.NewHistoryQueryExecutor(l.blockStore) // 实现 fabric\core\ledger\kvledger\history\historydb\historyleveldb\historyleveldb.go No.177 line
 }
 
 // CommitWithPvtData commits the block and the corresponding pvt data in an atomic operation

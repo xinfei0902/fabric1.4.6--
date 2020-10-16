@@ -131,12 +131,12 @@ func (ccpack *CDSPackage) getCDSData(cds *pb.ChaincodeDeploymentSpec) ([]byte, [
 		return nil, nil, nil, err
 	}
 
-	if err = factory.InitFactories(nil); err != nil {
+	if err = factory.InitFactories(nil); err != nil { //构建bccsp
 		return nil, nil, nil, fmt.Errorf("Internal error, BCCSP could not be initialized : %s", err)
 	}
 
 	//compute hashes now
-	hash, err := factory.GetDefault().GetHash(&bccsp.SHAOpts{})
+	hash, err := factory.GetDefault().GetHash(&bccsp.SHAOpts{}) //那种hash算法
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -239,7 +239,7 @@ func (ccpack *CDSPackage) InitFromPath(ccname string, ccversion string, path str
 	//incase ccpack is reused
 	ccpack.reset()
 
-	buf, err := GetChaincodePackageFromPath(ccname, ccversion, path)
+	buf, err := GetChaincodePackageFromPath(ccname, ccversion, path) //从安装链码路径 读取链码包
 	if err != nil {
 		return nil, nil, err
 	}

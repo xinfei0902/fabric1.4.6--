@@ -60,30 +60,30 @@ func (s *SupportImpl) IsSysCCAndNotInvokableExternal(name string) bool {
 // a client may obtain more than one such simulator; they are made unique
 // by way of the supplied txid
 func (s *SupportImpl) GetTxSimulator(ledgername string, txid string) (ledger.TxSimulator, error) {
-	lgr := s.Peer.GetLedger(ledgername)
+	lgr := s.Peer.GetLedger(ledgername) //获取账本  实现：fabric\core\peer\peer.go No.528 line
 	if lgr == nil {
 		return nil, errors.Errorf("Channel does not exist: %s", ledgername)
 	}
-	return lgr.NewTxSimulator(txid)
+	return lgr.NewTxSimulator(txid) //建立新的交易模拟器 实现 fabric\core\ledger\kvledger\kv_ledger.go No.345 line
 }
 
 // GetHistoryQueryExecutor gives handle to a history query executor for the
 // specified ledger
 func (s *SupportImpl) GetHistoryQueryExecutor(ledgername string) (ledger.HistoryQueryExecutor, error) {
-	lgr := s.Peer.GetLedger(ledgername)
+	lgr := s.Peer.GetLedger(ledgername) //获取账本  实现：fabric\core\peer\peer.go No.528 line
 	if lgr == nil {
 		return nil, errors.Errorf("Channel does not exist: %s", ledgername)
 	}
-	return lgr.NewHistoryQueryExecutor()
+	return lgr.NewHistoryQueryExecutor() //实现：fabric\core\ledger\kvledger\kv_ledger.go No.360 line
 }
 
 // GetTransactionByID retrieves a transaction by id
 func (s *SupportImpl) GetTransactionByID(chid, txID string) (*pb.ProcessedTransaction, error) {
-	lgr := s.Peer.GetLedger(chid)
+	lgr := s.Peer.GetLedger(chid) //根据通道获取账本 实现 fabric\core\peer\peer.go  No.528 line
 	if lgr == nil {
 		return nil, errors.Errorf("failed to look up the ledger for Channel %s", chid)
 	}
-	tx, err := lgr.GetTransactionByID(txID)
+	tx, err := lgr.GetTransactionByID(txID) //账本中查看交易id
 	if err != nil {
 		return nil, errors.WithMessage(err, "GetTransactionByID failed")
 	}
@@ -92,17 +92,17 @@ func (s *SupportImpl) GetTransactionByID(chid, txID string) (*pb.ProcessedTransa
 
 // GetLedgerHeight returns ledger height for given channelID
 func (s *SupportImpl) GetLedgerHeight(channelID string) (uint64, error) {
-	lgr := s.Peer.GetLedger(channelID)
+	lgr := s.Peer.GetLedger(channelID) //根据通道获取分类账本 实现:fabric\core\peer\peer.go No.528 line
 	if lgr == nil {
 		return 0, errors.Errorf("failed to look up the ledger for Channel %s", channelID)
 	}
 
-	info, err := lgr.GetBlockchainInfo()
+	info, err := lgr.GetBlockchainInfo() //根据获取分类账本获取区块信息 实现：fabric\common\ledger\blkstorage\fsblkstorage\fs_blockstore.go No.63 line
 	if err != nil {
 		return 0, errors.Wrap(err, fmt.Sprintf("failed to obtain information for Channel %s", channelID))
 	}
 
-	return info.Height, nil
+	return info.Height, nil //返回当前通道区块高度
 }
 
 // IsSysCC returns true if the name matches a system chaincode's
@@ -149,7 +149,7 @@ func (s *SupportImpl) Execute(txParams *ccprovider.TransactionParams, cid, name,
 
 // GetChaincodeDefinition returns ccprovider.ChaincodeDefinition for the chaincode with the supplied name
 func (s *SupportImpl) GetChaincodeDefinition(chaincodeName string, txsim ledger.QueryExecutor) (ccprovider.ChaincodeDefinition, error) {
-	return s.ChaincodeSupport.Lifecycle.ChaincodeDefinition(chaincodeName, txsim)
+	return s.ChaincodeSupport.Lifecycle.ChaincodeDefinition(chaincodeName, txsim) //实现： fabric\core\scc\lscc\lscc.go No.186 line
 }
 
 // CheckACL checks the ACL for the resource for the Channel using the

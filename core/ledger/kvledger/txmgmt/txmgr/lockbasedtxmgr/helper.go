@@ -42,7 +42,7 @@ func (h *queryHelper) getState(ns string, key string) ([]byte, []byte, error) {
 	if err := h.checkDone(); err != nil {
 		return nil, nil, err
 	}
-	versionedValue, err := h.txmgr.db.GetState(ns, key)
+	versionedValue, err := h.txmgr.db.GetState(ns, key) //看你选择是什么数据库了 leveldb还是couchdb 实现以couchdb举例：fabric\core\ledger\kvledger\txmgmt\statedb\statecouchdb\statecouchdb.go No.285 line
 	if err != nil {
 		return nil, nil, err
 	}

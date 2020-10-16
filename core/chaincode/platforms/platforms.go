@@ -79,11 +79,11 @@ func (r *Registry) ValidateSpec(ccType, path string) error {
 }
 
 func (r *Registry) ValidateDeploymentSpec(ccType string, codePackage []byte) error {
-	platform, ok := r.Platforms[ccType]
+	platform, ok := r.Platforms[ccType] //看合约是那种语言写的了  golang  java nodejs
 	if !ok {
 		return fmt.Errorf("Unknown chaincodeType: %s", ccType)
 	}
-	return platform.ValidateCodePackage(codePackage)
+	return platform.ValidateCodePackage(codePackage) //根据不同语言去验证规范 比如golang 实现方法在： fabric\core\chaincode\platforms\golang\platform.go No.123 line 如果是java 路径golang变成java
 }
 
 func (r *Registry) GetMetadataProvider(ccType string, codePackage []byte) (MetadataProvider, error) {

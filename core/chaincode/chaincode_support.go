@@ -135,11 +135,11 @@ func (cs *ChaincodeSupport) LaunchInit(ccci *ccprovider.ChaincodeContainerInfo) 
 // error. If the chaincode is already running, it simply returns.
 func (cs *ChaincodeSupport) Launch(chainID, chaincodeName, chaincodeVersion string, qe ledger.QueryExecutor) (*Handler, error) {
 	cname := chaincodeName + ":" + chaincodeVersion
-	if h := cs.HandlerRegistry.Handler(cname); h != nil {
+	if h := cs.HandlerRegistry.Handler(cname); h != nil { //判断此版本链码容器是否存在着 存在返回不存在重新注册启动
 		return h, nil
 	}
 
-	ccci, err := cs.Lifecycle.ChaincodeContainerInfo(chaincodeName, qe)
+	ccci, err := cs.Lifecycle.ChaincodeContainerInfo(chaincodeName, qe) //实现 ：fabric\core\scc\lscc\lscc.go No.165 line
 	if err != nil {
 		// TODO: There has to be a better way to do this...
 		if cs.UserRunsCC {
@@ -230,14 +230,14 @@ func (cs *ChaincodeSupport) ExecuteLegacyInit(txParams *ccprovider.TransactionPa
 		return nil, nil, errors.Wrapf(err, "[channel %s] claimed to start chaincode container for %s but could not find handler", txParams.ChannelID, cname)
 	}
 
-	resp, err := cs.execute(pb.ChaincodeMessage_INIT, txParams, cccid, spec.GetChaincodeSpec().Input, h)
+	resp, err := cs.execute(pb.ChaincodeMessage_INIT, txParams, cccid, spec.GetChaincodeSpec().Input, h) //根据类型 需要执行链码 初始化init()函数
 	return processChaincodeExecutionResult(txParams.TxID, cccid.Name, resp, err)
 }
 
 // Execute invokes chaincode and returns the original response.
 func (cs *ChaincodeSupport) Execute(txParams *ccprovider.TransactionParams, cccid *ccprovider.CCContext, input *pb.ChaincodeInput) (*pb.Response, *pb.ChaincodeEvent, error) {
-	resp, err := cs.Invoke(txParams, cccid, input)
-	return processChaincodeExecutionResult(txParams.TxID, cccid.Name, resp, err)
+	resp, err := cs.Invoke(txParams, cccid, input)                               //启动链码容器 调用链码
+	return processChaincodeExecutionResult(txParams.TxID, cccid.Name, resp, err) //对执行响应结果和事件检测处理
 }
 
 func processChaincodeExecutionResult(txid, ccName string, resp *pb.ChaincodeMessage, err error) (*pb.Response, *pb.ChaincodeEvent, error) {
@@ -254,7 +254,7 @@ func processChaincodeExecutionResult(txid, ccName string, resp *pb.ChaincodeMess
 	}
 
 	switch resp.Type {
-	case pb.ChaincodeMessage_COMPLETED:
+	case pb.ChaincodeMessage_COMPLETED: //执行完成 返回响应结果以及链码事件
 		res := &pb.Response{}
 		err := proto.Unmarshal(resp.Payload, res)
 		if err != nil {
@@ -282,7 +282,7 @@ func (cs *ChaincodeSupport) InvokeInit(txParams *ccprovider.TransactionParams, c
 // Invoke will invoke chaincode and return the message containing the response.
 // The chaincode will be launched if it is not already running.
 func (cs *ChaincodeSupport) Invoke(txParams *ccprovider.TransactionParams, cccid *ccprovider.CCContext, input *pb.ChaincodeInput) (*pb.ChaincodeMessage, error) {
-	h, err := cs.Launch(txParams.ChannelID, cccid.Name, cccid.Version, txParams.TXSimulator)
+	h, err := cs.Launch(txParams.ChannelID, cccid.Name, cccid.Version, txParams.TXSimulator) //启动链码容器 返回连接句柄
 	if err != nil {
 		return nil, err
 	}
@@ -299,18 +299,18 @@ func (cs *ChaincodeSupport) Invoke(txParams *ccprovider.TransactionParams, cccid
 	// otherwise, only allow cctype pb.ChaincodeMessage_INIT,
 	cctype := pb.ChaincodeMessage_TRANSACTION
 
-	return cs.execute(cctype, txParams, cccid, input, h)
+	return cs.execute(cctype, txParams, cccid, input, h) //去执行
 }
 
 // execute executes a transaction and waits for it to complete until a timeout value.
 func (cs *ChaincodeSupport) execute(cctyp pb.ChaincodeMessage_Type, txParams *ccprovider.TransactionParams, cccid *ccprovider.CCContext, input *pb.ChaincodeInput, h *Handler) (*pb.ChaincodeMessage, error) {
 	input.Decorations = txParams.ProposalDecorations
-	ccMsg, err := createCCMessage(cctyp, txParams.ChannelID, txParams.TxID, input)
+	ccMsg, err := createCCMessage(cctyp, txParams.ChannelID, txParams.TxID, input) //构建合约信息
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to create chaincode message")
 	}
 
-	ccresp, err := h.Execute(txParams, cccid, ccMsg, cs.ExecuteTimeout)
+	ccresp, err := h.Execute(txParams, cccid, ccMsg, cs.ExecuteTimeout) //去执行
 	if err != nil {
 		return nil, errors.WithMessage(err, fmt.Sprintf("error sending"))
 	}

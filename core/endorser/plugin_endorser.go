@@ -170,19 +170,19 @@ func (pe *PluginEndorser) EndorseWithPlugin(ctx Context) (*pb.ProposalResponse, 
 		return &pb.ProposalResponse{Response: ctx.Response}, nil
 	}
 
-	plugin, err := pe.getOrCreatePlugin(PluginName(ctx.PluginName), ctx.Channel)
+	plugin, err := pe.getOrCreatePlugin(PluginName(ctx.PluginName), ctx.Channel) //获取或者创建背书插件
 	if err != nil {
 		endorserLogger.Warning("Endorsement with plugin for", ctx, " failed:", err)
 		return nil, errors.Errorf("plugin with name %s could not be used: %v", ctx.PluginName, err)
 	}
 
-	prpBytes, err := proposalResponsePayloadFromContext(ctx)
+	prpBytes, err := proposalResponsePayloadFromContext(ctx) //提案信息转byte
 	if err != nil {
 		endorserLogger.Warning("Endorsement with plugin for", ctx, " failed:", err)
 		return nil, errors.Wrap(err, "failed assembling proposal response payload")
 	}
 
-	endorsement, prpBytes, err := plugin.Endorse(prpBytes, ctx.SignedProposal)
+	endorsement, prpBytes, err := plugin.Endorse(prpBytes, ctx.SignedProposal) //对提案进行背书 实现:fabric\core\handlers\endorsement\plugin\plugin.go No.42 line
 	if err != nil {
 		endorserLogger.Warning("Endorsement with plugin for", ctx, " failed:", err)
 		return nil, errors.WithStack(err)
@@ -200,7 +200,7 @@ func (pe *PluginEndorser) EndorseWithPlugin(ctx Context) (*pb.ProposalResponse, 
 
 // getAndStorePlugin returns a plugin instance for the given plugin name and channel
 func (pe *PluginEndorser) getOrCreatePlugin(plugin PluginName, channel string) (endorsement.Plugin, error) {
-	pluginFactory := pe.PluginFactoryByName(plugin)
+	pluginFactory := pe.PluginFactoryByName(plugin) //通过插件名称获取插件工厂
 	if pluginFactory == nil {
 		return nil, errors.Errorf("plugin with name %s wasn't found", plugin)
 	}
@@ -213,7 +213,7 @@ func (pe *PluginEndorser) getOrCreatePluginChannelMapping(plugin PluginName, pf 
 	pe.Lock()
 	defer pe.Unlock()
 	endorserChannelMapping, exists := pe.pluginChannelMapping[PluginName(plugin)]
-	if !exists {
+	if !exists { //不存在就注入插件
 		endorserChannelMapping = &pluginsByChannel{
 			pluginFactory:    pf,
 			channels2Plugins: make(map[string]endorsement.Plugin),

@@ -1241,7 +1241,7 @@ func (h *Handler) Execute(txParams *ccprovider.TransactionParams, cccid *ccprovi
 	chaincodeLogger.Debugf("Entry")
 	defer chaincodeLogger.Debugf("Exit")
 
-	txParams.CollectionStore = h.getCollectionStore(msg.ChannelId)
+	txParams.CollectionStore = h.getCollectionStore(msg.ChannelId) //获取通道下链码分类账本
 	txParams.IsInitTransaction = (msg.Type == pb.ChaincodeMessage_INIT)
 
 	txctx, err := h.TXContexts.Create(txParams)
@@ -1254,10 +1254,10 @@ func (h *Handler) Execute(txParams *ccprovider.TransactionParams, cccid *ccprovi
 		return nil, err
 	}
 
-	h.serialSendAsync(msg)
+	h.serialSendAsync(msg) //调用发送
 
 	var ccresp *pb.ChaincodeMessage
-	select {
+	select { //接收返回状态是完成还是超时等
 	case ccresp = <-txctx.ResponseNotifier:
 		// response is sent to user or calling chaincode. ChaincodeMessage_ERROR
 		// are typically treated as error

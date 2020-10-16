@@ -163,7 +163,7 @@ func (lscc *LifeCycleSysCC) InvokableCC2CC() bool      { return true }
 func (lscc *LifeCycleSysCC) Enabled() bool             { return true }
 
 func (lscc *LifeCycleSysCC) ChaincodeContainerInfo(chaincodeName string, qe ledger.QueryExecutor) (*ccprovider.ChaincodeContainerInfo, error) {
-	chaincodeDataBytes, err := qe.GetState("lscc", chaincodeName)
+	chaincodeDataBytes, err := qe.GetState("lscc", chaincodeName) //实现 fabric\core\ledger\kvledger\txmgmt\txmgr\lockbasedtxmgr\lockbased_query_executer.go  No.26 line
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not retrieve state for chaincode %s", chaincodeName)
 	}

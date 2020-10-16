@@ -40,7 +40,7 @@ type DefaultEndorsement struct {
 // The payload that was given as input (could be modified within this function)
 // Or error on failure
 func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (*peer.Endorsement, []byte, error) {
-	signer, err := e.SigningIdentityForRequest(sp)
+	signer, err := e.SigningIdentityForRequest(sp) //从签署提案中获取签署身份
 	if err != nil {
 		return nil, nil, errors.New(fmt.Sprintf("failed fetching signing identity: %v", err))
 	}
@@ -55,7 +55,7 @@ func (e *DefaultEndorsement) Endorse(prpBytes []byte, sp *peer.SignedProposal) (
 	if err != nil {
 		return nil, nil, errors.New(fmt.Sprintf("could not sign the proposal response payload: %v", err))
 	}
-	endorsement := &peer.Endorsement{Signature: signature, Endorser: identityBytes}
+	endorsement := &peer.Endorsement{Signature: signature, Endorser: identityBytes} //此处应用到区块中 可以参考区块 endorsements:[{"endorser":{},"signature":""}]
 	return endorsement, prpBytes, nil
 }
 

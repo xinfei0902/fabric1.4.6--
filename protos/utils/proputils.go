@@ -35,7 +35,7 @@ func GetChaincodeInvocationSpec(prop *peer.Proposal) (*peer.ChaincodeInvocationS
 		return nil, err
 	}
 	cis := &peer.ChaincodeInvocationSpec{}
-	err = proto.Unmarshal(ccPropPayload.Input, cis)
+	err = proto.Unmarshal(ccPropPayload.Input, cis) //把payload中调用链码参数 反序列化链码调用规则结构
 	return cis, errors.Wrap(err, "error unmarshaling ChaincodeInvocationSpec")
 }
 
@@ -132,7 +132,7 @@ func GetNonce(prop *peer.Proposal) ([]byte, error) {
 
 // GetChaincodeHeaderExtension get chaincode header extension given header
 func GetChaincodeHeaderExtension(hdr *common.Header) (*peer.ChaincodeHeaderExtension, error) {
-	chdr, err := UnmarshalChannelHeader(hdr.ChannelHeader)
+	chdr, err := UnmarshalChannelHeader(hdr.ChannelHeader) //通道header
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func GetChaincodeDeploymentSpec(code []byte, pr *platforms.Registry) (*peer.Chai
 	}
 
 	// FAB-2122: Validate the CDS according to platform specific requirements
-	return cds, pr.ValidateDeploymentSpec(cds.CCType(), cds.Bytes())
+	return cds, pr.ValidateDeploymentSpec(cds.CCType(), cds.Bytes()) //
 }
 
 // GetChaincodeAction gets the ChaincodeAction given chaicnode action bytes
@@ -584,13 +584,13 @@ func ComputeTxID(nonce, creator []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return hex.EncodeToString(digest), nil
+	return hex.EncodeToString(digest), nil //编码十六进制字符串
 }
 
 // CheckTxID checks that txid is equal to the Hash computed
 // over the concatenation of nonce and creator.
 func CheckTxID(txid string, nonce, creator []byte) error {
-	computedTxID, err := ComputeTxID(nonce, creator)
+	computedTxID, err := ComputeTxID(nonce, creator) //根据提案中 sign_header 中nonce和creator重新计算生成txid
 	if err != nil {
 		return errors.WithMessage(err, "error computing target txid")
 	}
