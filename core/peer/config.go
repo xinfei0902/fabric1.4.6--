@@ -127,15 +127,15 @@ func GetPeerEndpoint() (*pb.PeerEndpoint, error) {
 // GetServerConfig returns the gRPC server configuration for the peer
 func GetServerConfig() (comm.ServerConfig, error) {
 	secureOptions := &comm.SecureOptions{
-		UseTLS: viper.GetBool("peer.tls.enabled"),
+		UseTLS: viper.GetBool("peer.tls.enabled"), //是否使用tls
 	}
 	serverConfig := comm.ServerConfig{
-		ConnectionTimeout: viper.GetDuration("peer.connectiontimeout"),
+		ConnectionTimeout: viper.GetDuration("peer.connectiontimeout"), //连接超时
 		SecOpts:           secureOptions,
 	}
 	if secureOptions.UseTLS {
 		// get the certs from the file system
-		serverKey, err := ioutil.ReadFile(config.GetPath("peer.tls.key.file"))
+		serverKey, err := ioutil.ReadFile(config.GetPath("peer.tls.key.file")) //获取证书
 		if err != nil {
 			return serverConfig, fmt.Errorf("error loading TLS key (%s)", err)
 		}

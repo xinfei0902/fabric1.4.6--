@@ -146,7 +146,7 @@ func sendCreateChainTransaction(cf *ChannelCmdFactory) error {
 	var chCrtEnv *cb.Envelope
 
 	if channelTxFile != "" {
-		if chCrtEnv, err = createChannelFromConfigTx(channelTxFile); err != nil { //读取  通道名.tx 文件
+		if chCrtEnv, err = createChannelFromConfigTx(channelTxFile); err != nil { //读取 命令参数 --f  通道名.tx 文件
 			return err
 		}
 	} else {
@@ -182,7 +182,7 @@ func executeCreate(cf *ChannelCmdFactory) error {
 		return err
 	}
 
-	b, err := proto.Marshal(block)
+	b, err := proto.Marshal(block) //序列化区块信息
 	if err != nil {
 		return err
 	}

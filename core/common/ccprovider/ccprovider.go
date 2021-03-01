@@ -108,7 +108,7 @@ func GetChaincodePackageFromPath(ccname string, ccversion string, ccInstallPath 
 
 // ChaincodePackageExists returns whether the chaincode package exists in the file system
 func ChaincodePackageExists(ccname string, ccversion string) (bool, error) {
-	path := filepath.Join(chaincodeInstallPath, ccname+"."+ccversion)
+	path := filepath.Join(chaincodeInstallPath, ccname+"."+ccversion) //组装合约路径 例如 /var/hyperledger/production/chaincodes/mycc.1.0
 	_, err := os.Stat(path)
 	if err == nil {
 		// chaincodepackage already exists

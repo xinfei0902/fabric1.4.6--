@@ -67,16 +67,16 @@ func getChaincodes(cmd *cobra.Command, cf *ChaincodeCmdFactory) error {
 		}
 	}
 
-	creator, err := cf.Signer.Serialize()
+	creator, err := cf.Signer.Serialize() //获取签署者 包含MSPID 证书字节 实现：fabric\msp\identities.go No.174 line
 	if err != nil {
 		return fmt.Errorf("Error serializing identity for %s: %s", cf.Signer.GetIdentifier(), err)
 	}
 
 	var prop *pb.Proposal
-	if getInstalledChaincodes && (!getInstantiatedChaincodes) {
-		prop, _, err = utils.CreateGetInstalledChaincodesProposal(creator)
-	} else if getInstantiatedChaincodes && (!getInstalledChaincodes) {
-		prop, _, err = utils.CreateGetChaincodesProposal(channelID, creator)
+	if getInstalledChaincodes && (!getInstantiatedChaincodes) { // 这两个bool型变量是由命令行决定的 例如 peer chaincode list --installed 那么getInstalledChaincodes=true getInstantiatedChaincodes=false
+		prop, _, err = utils.CreateGetInstalledChaincodesProposal(creator) //构建提案
+	} else if getInstantiatedChaincodes && (!getInstalledChaincodes) { //例如 peer chaincode list -C mychannel --instantiated 那么getInstalledChaincodes=false getInstantiatedChaincodes=true
+		prop, _, err = utils.CreateGetChaincodesProposal(channelID, creator) //构建提案
 	} else {
 		return fmt.Errorf("Must explicitly specify \"--installed\" or \"--instantiated\"")
 	}
@@ -86,13 +86,13 @@ func getChaincodes(cmd *cobra.Command, cf *ChaincodeCmdFactory) error {
 	}
 
 	var signedProp *pb.SignedProposal
-	signedProp, err = utils.GetSignedProposal(prop, cf.Signer)
+	signedProp, err = utils.GetSignedProposal(prop, cf.Signer) //提案签名
 	if err != nil {
 		return fmt.Errorf("Error creating signed proposal  %s: %s", chainFuncName, err)
 	}
 
 	// list is currently only supported for one peer
-	proposalResponse, err := cf.EndorserClients[0].ProcessProposal(context.Background(), signedProp)
+	proposalResponse, err := cf.EndorserClients[0].ProcessProposal(context.Background(), signedProp) //提交的背书节点返回结果
 	if err != nil {
 		return errors.Errorf("Error endorsing %s: %s", chainFuncName, err)
 	}
@@ -111,13 +111,13 @@ func getChaincodes(cmd *cobra.Command, cf *ChaincodeCmdFactory) error {
 		return err
 	}
 
-	if getInstalledChaincodes {
+	if getInstalledChaincodes { //根据查询flag 打印信息  可以进入容器输入命令查看 输出信息如下
 		fmt.Println("Get installed chaincodes on peer:")
 	} else {
 		fmt.Printf("Get instantiated chaincodes on channel %s:\n", channelID)
 	}
 	for _, chaincode := range cqr.Chaincodes {
-		fmt.Printf("%v\n", ccInfo{chaincode}.String())
+		fmt.Printf("%v\n", ccInfo{chaincode}.String()) //打印出合约名称
 	}
 	return nil
 }

@@ -41,7 +41,7 @@ const CmdRoot = "core"
 var mainLogger = flogging.MustGetLogger("main")
 var logOutput = os.Stderr
 
-var (
+var ( //与下面init()函数对应 可追踪
 	defaultConnTimeout = 3 * time.Second
 	// These function variables (xyzFnc) can be used to invoke corresponding xyz function
 	// this will allow the invoking packages to mock these functions in their unit test cases
@@ -97,7 +97,7 @@ func init() {
 // InitConfig initializes viper config
 func InitConfig(cmdRoot string) error {
 
-	err := config.InitViper(nil, cmdRoot)
+	err := config.InitViper(nil, cmdRoot) //把配置文件路径已经 前缀名称复制给viper中
 	if err != nil {
 		return err
 	}
@@ -135,12 +135,12 @@ func InitCrypto(mspMgrConfigDir, localMSPID, localMSPType string) error {
 	// Init the BCCSP
 	SetBCCSPKeystorePath() //设置bccsp中keystore为key keystore路径为v 存放viper
 	var bccspConfig *factory.FactoryOpts
-	err = viperutil.EnhancedExactUnmarshalKey("peer.BCCSP", &bccspConfig)
+	err = viperutil.EnhancedExactUnmarshalKey("peer.BCCSP", &bccspConfig) //将peer中core.yaml的 peer: Bccsp：中子树列 k v写入到bccspConfig结构中
 	if err != nil {
 		return errors.WithMessage(err, "could not parse YAML config")
 	}
 
-	err = mspmgmt.LoadLocalMspWithType(mspMgrConfigDir, bccspConfig, localMSPID, localMSPType)
+	err = mspmgmt.LoadLocalMspWithType(mspMgrConfigDir, bccspConfig, localMSPID, localMSPType) //加载 根据mspType(默认bsscp)获取指定路径msp到mspmgmt（msp管理）
 	if err != nil {
 		return errors.WithMessage(err, fmt.Sprintf("error when setting up MSP of type %s from directory %s", localMSPType, mspMgrConfigDir))
 	}
@@ -157,7 +157,7 @@ func SetBCCSPKeystorePath() {
 
 // GetDefaultSigner return a default Signer(Default/PERR) for cli
 func GetDefaultSigner() (msp.SigningIdentity, error) {
-	signer, err := mspmgmt.GetLocalMSP().GetDefaultSigningIdentity()
+	signer, err := mspmgmt.GetLocalMSP().GetDefaultSigningIdentity() //获取签署身份 实现：fabric\msp\mspimpl.go No.269 line
 	if err != nil {
 		return nil, errors.WithMessage(err, "error obtaining the default signing identity")
 	}
@@ -176,22 +176,22 @@ func GetOrdererEndpointOfChain(chainID string, signer msp.SigningIdentity, endor
 		},
 	}
 
-	creator, err := signer.Serialize()
+	creator, err := signer.Serialize() //签署者身份 MSPID pem   实现： github.com\hyperledger\fabric\msp\identities.go  No.174 line
 	if err != nil {
 		return nil, errors.WithMessage(err, fmt.Sprintf("error serializing identity for %s", signer.GetIdentifier()))
 	}
 
-	prop, _, err := putils.CreateProposalFromCIS(pcommon.HeaderType_CONFIG, "", invocation, creator)
+	prop, _, err := putils.CreateProposalFromCIS(pcommon.HeaderType_CONFIG, "", invocation, creator) //构建提案
 	if err != nil {
 		return nil, errors.WithMessage(err, "error creating GetConfigBlock proposal")
 	}
 
-	signedProp, err := putils.GetSignedProposal(prop, signer)
+	signedProp, err := putils.GetSignedProposal(prop, signer) //对提案进行签名
 	if err != nil {
 		return nil, errors.WithMessage(err, "error creating signed GetConfigBlock proposal")
 	}
 
-	proposalResp, err := endorserClient.ProcessProposal(context.Background(), signedProp)
+	proposalResp, err := endorserClient.ProcessProposal(context.Background(), signedProp) //把已经签好的提案提交给背书节点 并返回模拟执行的结果
 	if err != nil {
 		return nil, errors.WithMessage(err, "error endorsing GetConfigBlock")
 	}
@@ -201,16 +201,16 @@ func GetOrdererEndpointOfChain(chainID string, signer msp.SigningIdentity, endor
 	}
 
 	if proposalResp.Response.Status != 0 && proposalResp.Response.Status != 200 {
-		return nil, errors.Errorf("error bad proposal response %d: %s", proposalResp.Response.Status, proposalResp.Response.Message)
+		return nil, errors.Errorf("error bad proposal response %d: %s", proposalResp.Response.Status, proposalResp.Response.Message) //这几个错误也是比较常见的
 	}
 
 	// parse config block
-	block, err := putils.GetBlockFromBlockBytes(proposalResp.Response.Payload)
+	block, err := putils.GetBlockFromBlockBytes(proposalResp.Response.Payload) //从返回结果中获取信息转block 把结构和解析出的区块对比 就比较明显了
 	if err != nil {
 		return nil, errors.WithMessage(err, "error unmarshaling config block")
 	}
 
-	envelopeConfig, err := putils.ExtractEnvelope(block, 0)
+	envelopeConfig, err := putils.ExtractEnvelope(block, 0) //对块中data数据进行信封封装 还记得新增组织中最后提交的是封装信封信息吗？
 	if err != nil {
 		return nil, errors.WithMessage(err, "error extracting config block envelope")
 	}
@@ -219,7 +219,7 @@ func GetOrdererEndpointOfChain(chainID string, signer msp.SigningIdentity, endor
 		return nil, errors.WithMessage(err, "error loading config block")
 	}
 
-	return bundle.ChannelConfig().OrdererAddresses(), nil
+	return bundle.ChannelConfig().OrdererAddresses(), nil //OrdererAddresses() 实现: fabric\common\channelconfig\channel.go No.152 line
 }
 
 // CheckLogLevel checks that a given log level string is valid
@@ -230,7 +230,7 @@ func CheckLogLevel(level string) error {
 	return nil
 }
 
-func configFromEnv(prefix string) (address, override string, clientConfig comm.ClientConfig, err error) {
+func configFromEnv(prefix string) (address, override string, clientConfig comm.ClientConfig, err error) { //从环境变量中回去配置信息
 	address = viper.GetString(prefix + ".address")
 	override = viper.GetString(prefix + ".tls.serverhostoverride")
 	clientConfig = comm.ClientConfig{}

@@ -53,10 +53,10 @@ func newRollbackMgr(blockStorageDir, ledgerID string, indexConfig *blkstorage.In
 
 	r.ledgerID = ledgerID
 	conf := &Conf{blockStorageDir: blockStorageDir}
-	r.ledgerDir = conf.getLedgerBlockDir(ledgerID)
-	r.targetBlockNum = targetBlockNum
+	r.ledgerDir = conf.getLedgerBlockDir(ledgerID) ///var/hyperledger/production/ledgersData/chains/chains/${ledgerID}
+	r.targetBlockNum = targetBlockNum              //指定从哪个开始回滚
 
-	r.indexDir = conf.getIndexDir()
+	r.indexDir = conf.getIndexDir() // /var/hyperledger/production/ledgersData/chains/index
 	r.dbProvider = leveldbhelper.NewProvider(&leveldbhelper.Conf{DBPath: r.indexDir})
 	var err error
 	indexDB := r.dbProvider.GetDBHandle(ledgerID)
@@ -266,8 +266,8 @@ func ValidateRollbackParams(blockStorageDir, ledgerID string, targetBlockNum uin
 	logger.Infof("Validating the rollback parameters: ledgerID [%s], block number [%d]",
 		ledgerID, targetBlockNum)
 	conf := &Conf{blockStorageDir: blockStorageDir}
-	ledgerDir := conf.getLedgerBlockDir(ledgerID)
-	if err := validateLedgerID(ledgerDir, ledgerID); err != nil {
+	ledgerDir := conf.getLedgerBlockDir(ledgerID)                 // /var/hyperledger/production/ledgersData/chains/chains/${ledgerID}
+	if err := validateLedgerID(ledgerDir, ledgerID); err != nil { //验证是否存在
 		return err
 	}
 	if err := validateTargetBlkNum(ledgerDir, targetBlockNum); err != nil {

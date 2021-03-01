@@ -117,7 +117,7 @@ func getChaincodeInstallPackage(cds *pb.ChaincodeDeploymentSpec, cf *ChaincodeCm
 	if ip == "" {
 		//if an instantiation policy is not given, default
 		//to "admin  must sign chaincode instantiation proposals"
-		mspid, err := mspmgmt.GetLocalMSP().GetIdentifier()
+		mspid, err := mspmgmt.GetLocalMSP().GetIdentifier() //获取本地MSP的 MSPID
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +130,7 @@ func getChaincodeInstallPackage(cds *pb.ChaincodeDeploymentSpec, cf *ChaincodeCm
 	}
 
 	//we get the Envelope of type CHAINCODE_PACKAGE
-	objToWrite, err = ccpackage.OwnerCreateSignedCCDepSpec(cds, sp, owner)
+	objToWrite, err = ccpackage.OwnerCreateSignedCCDepSpec(cds, sp, owner) //获取CHAINCODE_PACKAGE类型的信封
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func chaincodePackage(cmd *cobra.Command, args []string, cdsFact ccDepSpecFactor
 			return err
 		}
 	}
-	spec, err := getChaincodeSpec(cmd)
+	spec, err := getChaincodeSpec(cmd) //根据命令行信息获取链码规则
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func chaincodePackage(cmd *cobra.Command, args []string, cdsFact ccDepSpecFactor
 	}
 
 	var bytesToWrite []byte
-	if createSignedCCDepSpec {
+	if createSignedCCDepSpec { // 命令行 指定 -s 为true
 		bytesToWrite, err = getChaincodeInstallPackage(cds, cf)
 		if err != nil {
 			return err
@@ -183,7 +183,7 @@ func chaincodePackage(cmd *cobra.Command, args []string, cdsFact ccDepSpecFactor
 
 	logger.Debugf("Packaged chaincode into deployment spec of size <%d>, with args = %v", len(bytesToWrite), args)
 	fileToWrite := args[0]
-	err = ioutil.WriteFile(fileToWrite, bytesToWrite, 0700)
+	err = ioutil.WriteFile(fileToWrite, bytesToWrite, 0700) //打包链码写入文件中  此文件是命令指定的 例如 peer chaincode package ${文件名} -n -v ....
 	if err != nil {
 		logger.Errorf("failed writing deployment spec to file [%s]: [%s]", fileToWrite, err)
 		return err

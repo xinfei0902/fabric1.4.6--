@@ -234,7 +234,7 @@ func (chain *chainImpl) configure(config *cb.Envelope, configSeq uint64, origina
 	if err != nil {
 		return fmt.Errorf("cannot enqueue, unable to marshal config because %s", err)
 	}
-	if !chain.enqueue(newConfigMessage(marshaledConfig, configSeq, originalOffset)) {
+	if !chain.enqueue(newConfigMessage(marshaledConfig, configSeq, originalOffset)) { //
 		return fmt.Errorf("cannot enqueue")
 	}
 	return nil
@@ -255,12 +255,12 @@ func (chain *chainImpl) enqueue(kafkaMsg *ab.KafkaMessage) bool {
 				logger.Errorf("[channel: %s] unable to marshal Kafka message because = %s", chain.ChainID(), err)
 				return false
 			}
-			message := newProducerMessage(chain.channel, payload)
-			if _, _, err = chain.producer.SendMessage(message); err != nil {
+			message := newProducerMessage(chain.channel, payload)            //建立生成者消息
+			if _, _, err = chain.producer.SendMessage(message); err != nil { //消息发送给kafka
 				logger.Errorf("[channel: %s] cannot enqueue envelope because = %s", chain.ChainID(), err)
 				return false
 			}
-			logger.Debugf("[channel: %s] Envelope enqueued successfully", chain.ChainID())
+			logger.Debugf("[channel: %s] Envelope enqueued successfully", chain.ChainID()) //说明入队成功
 			return true
 		}
 	default: // Not ready yet

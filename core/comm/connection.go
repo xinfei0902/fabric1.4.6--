@@ -208,21 +208,21 @@ func NewClientConnectionWithAddress(peerAddress string, block bool, tslEnabled b
 	var opts []grpc.DialOption
 
 	if ka != nil {
-		opts = ClientKeepaliveOptions(ka)
+		opts = ClientKeepaliveOptions(ka) //grpc的连接选项 心跳 超时
 	} else {
 		// set to the default options
 		opts = ClientKeepaliveOptions(DefaultKeepaliveOptions)
 	}
 
 	if tslEnabled {
-		opts = append(opts, grpc.WithTransportCredentials(creds))
+		opts = append(opts, grpc.WithTransportCredentials(creds)) //构建grpc 传输的凭证
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
 	if block {
 		opts = append(opts, grpc.WithBlock())
 	}
-	opts = append(opts, grpc.WithDefaultCallOptions(
+	opts = append(opts, grpc.WithDefaultCallOptions( //grpc传输选项  发送和接收最大字节数
 		grpc.MaxCallRecvMsgSize(MaxRecvMsgSize),
 		grpc.MaxCallSendMsgSize(MaxSendMsgSize),
 	))
@@ -237,7 +237,7 @@ func NewClientConnectionWithAddress(peerAddress string, block bool, tslEnabled b
 
 func InitTLSForShim(key, certStr string) credentials.TransportCredentials {
 	var sn string
-	priv, err := base64.StdEncoding.DecodeString(key)
+	priv, err := base64.StdEncoding.DecodeString(key) //返回base64字符串的字节
 	if err != nil {
 		commLogger.Panicf("failed decoding private key from base64, string: %s, error: %v", key, err)
 	}
@@ -254,7 +254,7 @@ func InitTLSForShim(key, certStr string) credentials.TransportCredentials {
 		commLogger.Panicf("failed loading root ca cert: %v", err)
 	}
 	cp := x509.NewCertPool()
-	if !cp.AppendCertsFromPEM(b) {
+	if !cp.AppendCertsFromPEM(b) { //读取认证证书是否存在不存在记录
 		commLogger.Panicf("failed to append certificates")
 	}
 	return credentials.NewTLS(&tls.Config{

@@ -180,20 +180,20 @@ func (bh *Handler) ProcessMessage(msg *cb.Envelope, addr string) (resp *ab.Broad
 	} else { // isConfig
 		logger.Debugf("[channel: %s] Broadcast is processing config update message from %s", chdr.ChannelId, addr)
 
-		config, configSeq, err := processor.ProcessConfigUpdateMsg(msg)
+		config, configSeq, err := processor.ProcessConfigUpdateMsg(msg) //对配置信息处理  实现:fabric\orderer\common\msgprocessor\systemchannel.go No.142 line
 		if err != nil {
 			logger.Warningf("[channel: %s] Rejecting broadcast of config message from %s because of error: %s", chdr.ChannelId, addr, err)
 			return &ab.BroadcastResponse{Status: ClassifyError(err), Info: err.Error()}
 		}
-		tracker.EndValidate()
+		tracker.EndValidate() //验证结束时间
 
-		tracker.BeginEnqueue()
-		if err = processor.WaitReady(); err != nil {
+		tracker.BeginEnqueue()                       //入队列
+		if err = processor.WaitReady(); err != nil { //等待入队完成
 			logger.Warningf("[channel: %s] Rejecting broadcast of message from %s with SERVICE_UNAVAILABLE: rejected by Consenter: %s", chdr.ChannelId, addr, err)
 			return &ab.BroadcastResponse{Status: cb.Status_SERVICE_UNAVAILABLE, Info: err.Error()}
 		}
 
-		err = processor.Configure(config, configSeq)
+		err = processor.Configure(config, configSeq) //实现:需要看使用是什么共识比如kafka实现方法是： fabric\orderer\consensus\kafka\chain.go No.228 line  如果raft 把目录kafka换成etcdraft
 		if err != nil {
 			logger.Warningf("[channel: %s] Rejecting broadcast of config message from %s with SERVICE_UNAVAILABLE: rejected by Configure: %s", chdr.ChannelId, addr, err)
 			return &ab.BroadcastResponse{Status: cb.Status_SERVICE_UNAVAILABLE, Info: err.Error()}

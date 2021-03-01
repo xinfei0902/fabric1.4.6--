@@ -65,7 +65,7 @@ func instantiate(cmd *cobra.Command, cf *ChaincodeCmdFactory) (*protcommon.Envel
 		return nil, fmt.Errorf("error getting chaincode code %s: %s", chaincodeName, err)
 	}
 
-	creator, err := cf.Signer.Serialize()
+	creator, err := cf.Signer.Serialize() //获取签署身份 包含MSPID 证书字节 实现：fabric\msp\identities.go No.174 line
 	if err != nil {
 		return nil, fmt.Errorf("error serializing identity for %s: %s", cf.Signer.GetIdentifier(), err)
 	}

@@ -150,11 +150,11 @@ func serve(args []string) error {
 
 	//startup aclmgmt with default ACL providers (resource based and default 1.0 policies based).
 	//Users can pass in their own ACLProvider to RegisterACLProvider (currently unit tests do this)
-	aclProvider := aclmgmt.NewACLProvider(
+	aclProvider := aclmgmt.NewACLProvider( //创建ACL提供者
 		aclmgmt.ResourceGetter(peer.GetStableChannelConfig),
 	)
 
-	pr := platforms.NewRegistry(
+	pr := platforms.NewRegistry( //平台  链码编写语言
 		&golang.Platform{},
 		&node.Platform{},
 		&java.Platform{},
@@ -163,7 +163,7 @@ func serve(args []string) error {
 
 	deployedCCInfoProvider := &lscc.DeployedCCInfoProvider{}
 
-	identityDeserializerFactory := func(chainID string) msp.IdentityDeserializer {
+	identityDeserializerFactory := func(chainID string) msp.IdentityDeserializer { //获取通道msp管理
 		return mgmt.GetManagerForChain(chainID)
 	}
 
@@ -178,16 +178,16 @@ func serve(args []string) error {
 	logObserver := floggingmetrics.NewObserver(metricsProvider)
 	flogging.Global.SetObserver(logObserver)
 
-	membershipInfoProvider := privdata.NewMembershipInfoProvider(mspID, createSelfSignedData(), identityDeserializerFactory)
+	membershipInfoProvider := privdata.NewMembershipInfoProvider(mspID, createSelfSignedData(), identityDeserializerFactory) //提供其他成员节点信息
 	//initialize resource management exit
 	ledgermgmt.Initialize(
 		&ledgermgmt.Initializer{
-			CustomTxProcessors:            peer.ConfigTxProcessors,
-			PlatformRegistry:              pr,
-			DeployedChaincodeInfoProvider: deployedCCInfoProvider,
-			MembershipInfoProvider:        membershipInfoProvider,
-			MetricsProvider:               metricsProvider,
-			HealthCheckRegistry:           opsSystem,
+			CustomTxProcessors:            peer.ConfigTxProcessors, //交易处理
+			PlatformRegistry:              pr,                      //语言平台
+			DeployedChaincodeInfoProvider: deployedCCInfoProvider,  //部署链码
+			MembershipInfoProvider:        membershipInfoProvider,  //节点成员
+			MetricsProvider:               metricsProvider,         //peer检测
+			HealthCheckRegistry:           opsSystem,               //健康检测
 		},
 	)
 
@@ -200,17 +200,17 @@ func serve(args []string) error {
 		viper.Set("chaincode.mode", chaincode.DevModeUserRunsChaincode)
 	}
 
-	if err := peer.CacheConfiguration(); err != nil {
+	if err := peer.CacheConfiguration(); err != nil { //获取配置地址 进行缓存
 		return err
 	}
 
-	peerEndpoint, err := peer.GetPeerEndpoint()
+	peerEndpoint, err := peer.GetPeerEndpoint() //获取地址 如果不存在重新获取进行缓存
 	if err != nil {
 		err = fmt.Errorf("Failed to get Peer Endpoint: %s", err)
 		return err
 	}
 
-	peerHost, _, err := net.SplitHostPort(peerEndpoint.Address)
+	peerHost, _, err := net.SplitHostPort(peerEndpoint.Address) //host与port分离
 	if err != nil {
 		return fmt.Errorf("peer address is not in the format of host:port: %v", err)
 	}
@@ -221,7 +221,7 @@ func serve(args []string) error {
 		logger.Fatalf("Error loading secure config for peer (%s)", err)
 	}
 
-	throttle := comm.NewThrottle(grpcMaxConcurrency)
+	throttle := comm.NewThrottle(grpcMaxConcurrency) //grpc最大并发数
 	serverConfig.Logger = flogging.MustGetLogger("core.comm").With("server", "PeerServer")
 	serverConfig.ServerStatsHandler = comm.NewServerStatsHandler(metricsProvider)
 	serverConfig.UnaryInterceptors = append(
@@ -267,7 +267,7 @@ func serve(args []string) error {
 		}
 	}
 
-	abServer := peer.NewDeliverEventsServer(mutualTLS, policyCheckerProvider, &peer.DeliverChainManager{}, metricsProvider)
+	abServer := peer.NewDeliverEventsServer(mutualTLS, policyCheckerProvider, &peer.DeliverChainManager{}, metricsProvider) //构建用于交付与过滤区块服务
 	pb.RegisterDeliverServer(peerServer.Server(), abServer)
 
 	// Initialize chaincode service
@@ -747,7 +747,7 @@ func startChaincodeServer(
 	ops *operations.System,
 ) (*chaincode.ChaincodeSupport, ccprovider.ChaincodeProvider, *scc.Provider, *persistence.PackageProvider) {
 	// Setup chaincode path
-	chaincodeInstallPath := ccprovider.GetChaincodeInstallPathFromViper()
+	chaincodeInstallPath := ccprovider.GetChaincodeInstallPathFromViper() //获取链码安装路径
 	ccprovider.SetChaincodesPath(chaincodeInstallPath)
 
 	ccPackageParser := &persistence.ChaincodePackageParser{}

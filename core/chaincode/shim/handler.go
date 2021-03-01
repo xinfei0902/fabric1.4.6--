@@ -182,7 +182,7 @@ func (handler *Handler) handleInit(msg *pb.ChaincodeMessage, errc chan error) {
 		var nextStateMsg *pb.ChaincodeMessage
 
 		defer func() {
-			handler.triggerNextState(nextStateMsg, errc)
+			handler.triggerNextState(nextStateMsg, errc) //等待执行完毕 把初始化信息发送给peer节点
 		}()
 
 		errFunc := func(err error, payload []byte, ce *pb.ChaincodeEvent, errFmt string, args ...interface{}) *pb.ChaincodeMessage {
@@ -198,7 +198,7 @@ func (handler *Handler) handleInit(msg *pb.ChaincodeMessage, errc chan error) {
 		}
 		// Get the function and args from Payload
 		input := &pb.ChaincodeInput{}
-		unmarshalErr := proto.Unmarshal(msg.Payload, input)
+		unmarshalErr := proto.Unmarshal(msg.Payload, input) //获取链码初始化输入的参数
 		if nextStateMsg = errFunc(unmarshalErr, nil, nil, "[%s] Incorrect payload format. Sending %s", shorttxid(msg.Txid), pb.ChaincodeMessage_ERROR.String()); nextStateMsg != nil {
 			return
 		}
@@ -206,11 +206,11 @@ func (handler *Handler) handleInit(msg *pb.ChaincodeMessage, errc chan error) {
 		// Call chaincode's Run
 		// Create the ChaincodeStub which the chaincode can use to callback
 		stub := new(ChaincodeStub)
-		err := stub.init(handler, msg.ChannelId, msg.Txid, input, msg.Proposal)
+		err := stub.init(handler, msg.ChannelId, msg.Txid, input, msg.Proposal) //获取所有信息组装进ChaincodeStub结构中
 		if nextStateMsg = errFunc(err, nil, stub.chaincodeEvent, "[%s] Init get error response. Sending %s", shorttxid(msg.Txid), pb.ChaincodeMessage_ERROR.String()); nextStateMsg != nil {
 			return
 		}
-		res := handler.cc.Init(stub)
+		res := handler.cc.Init(stub) //此处就会调用链码合约中必写的init()函数了
 		chaincodeLogger.Debugf("[%s] Init get response status: %d", shorttxid(msg.Txid), res.Status)
 
 		if res.Status >= ERROR {
@@ -244,7 +244,7 @@ func (handler *Handler) handleTransaction(msg *pb.ChaincodeMessage, errc chan er
 		var nextStateMsg *pb.ChaincodeMessage
 
 		defer func() {
-			handler.triggerNextState(nextStateMsg, errc)
+			handler.triggerNextState(nextStateMsg, errc) //等执行完毕把链码执行结果 返回给peer
 		}()
 
 		errFunc := func(err error, ce *pb.ChaincodeEvent, errStr string, args ...interface{}) *pb.ChaincodeMessage {
@@ -258,7 +258,7 @@ func (handler *Handler) handleTransaction(msg *pb.ChaincodeMessage, errc chan er
 
 		// Get the function and args from Payload
 		input := &pb.ChaincodeInput{}
-		unmarshalErr := proto.Unmarshal(msg.Payload, input)
+		unmarshalErr := proto.Unmarshal(msg.Payload, input) //获取调用链码的参数
 		if nextStateMsg = errFunc(unmarshalErr, nil, "[%s] Incorrect payload format. Sending %s", shorttxid(msg.Txid), pb.ChaincodeMessage_ERROR.String()); nextStateMsg != nil {
 			return
 		}
@@ -791,13 +791,13 @@ func (handler *Handler) handleReady(msg *pb.ChaincodeMessage, errc chan error) e
 		//we don't return error on ERROR
 		return nil
 
-	case pb.ChaincodeMessage_INIT:
+	case pb.ChaincodeMessage_INIT: //链码实例化
 		chaincodeLogger.Debugf("[%s] Received %s, initializing chaincode", shorttxid(msg.Txid), msg.Type)
 		// Call the chaincode's Run function to initialize
 		handler.handleInit(msg, errc)
 		return nil
 
-	case pb.ChaincodeMessage_TRANSACTION:
+	case pb.ChaincodeMessage_TRANSACTION: //invoke
 		chaincodeLogger.Debugf("[%s] Received %s, invoking transaction on chaincode(state:%s)", shorttxid(msg.Txid), msg.Type, handler.state)
 		// Call the chaincode's Run function to invoke transaction
 		handler.handleTransaction(msg, errc)
@@ -809,7 +809,7 @@ func (handler *Handler) handleReady(msg *pb.ChaincodeMessage, errc chan error) e
 
 //handle established state
 func (handler *Handler) handleEstablished(msg *pb.ChaincodeMessage, errc chan error) error {
-	if msg.Type == pb.ChaincodeMessage_READY {
+	if msg.Type == pb.ChaincodeMessage_READY { //如果接收到peer的 ready消息 更改链码侧其状态
 		handler.state = ready
 		return nil
 	}
@@ -818,7 +818,7 @@ func (handler *Handler) handleEstablished(msg *pb.ChaincodeMessage, errc chan er
 
 //handle created state
 func (handler *Handler) handleCreated(msg *pb.ChaincodeMessage, errc chan error) error {
-	if msg.Type == pb.ChaincodeMessage_REGISTERED {
+	if msg.Type == pb.ChaincodeMessage_REGISTERED { //接收peer返回的register消息 更改链码侧状态
 		handler.state = established
 		return nil
 	}
@@ -827,7 +827,7 @@ func (handler *Handler) handleCreated(msg *pb.ChaincodeMessage, errc chan error)
 
 // handleMessage message handles loop for shim side of chaincode/peer stream.
 func (handler *Handler) handleMessage(msg *pb.ChaincodeMessage, errc chan error) error {
-	if msg.Type == pb.ChaincodeMessage_KEEPALIVE {
+	if msg.Type == pb.ChaincodeMessage_KEEPALIVE { //接收是心跳保持连接类型  //将消息返回 双方一直保持联系 与peer侧接收消息处理不一样
 		chaincodeLogger.Debug("Sending KEEPALIVE response")
 		handler.serialSendAsync(msg, nil) // ignore errors, maybe next KEEPALIVE will work
 		return nil
@@ -836,13 +836,13 @@ func (handler *Handler) handleMessage(msg *pb.ChaincodeMessage, errc chan error)
 
 	var err error
 
-	switch handler.state {
+	switch handler.state { //链码侧状态
 	case ready:
-		err = handler.handleReady(msg, errc)
+		err = handler.handleReady(msg, errc) //当链码侧状态进入ready 就可以执行init invoke操作了
 	case established:
 		err = handler.handleEstablished(msg, errc)
 	case created:
-		err = handler.handleCreated(msg, errc)
+		err = handler.handleCreated(msg, errc) //
 	default:
 		err = errors.Errorf("[%s] Chaincode handler cannot handle message (%s) with payload size (%d) while in state: %s", msg.Txid, msg.Type, len(msg.Payload), handler.state)
 	}

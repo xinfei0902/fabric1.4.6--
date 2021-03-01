@@ -24,12 +24,12 @@ func LoadLocalMspWithType(dir string, bccspConfig *factory.FactoryOpts, mspID, m
 		return errors.New("the local MSP must have an ID")
 	}
 
-	conf, err := msp.GetLocalMspConfigWithType(dir, bccspConfig, mspID, mspType)
+	conf, err := msp.GetLocalMspConfigWithType(dir, bccspConfig, mspID, mspType) //根据mspType(默认bsscp)获取指定路径msp
 	if err != nil {
 		return err
 	}
 
-	return GetLocalMSP().Setup(conf)
+	return GetLocalMSP().Setup(conf) //根据conf内容 构建本节点msp管理
 }
 
 // LoadLocalMsp loads the local MSP from the specified directory
@@ -164,7 +164,7 @@ func loadLocaMSP() msp.MSP {
 		mspLogger.Fatalf("Failed to initialize local MSP, received err %+v", err)
 	}
 	switch mspType {
-	case msp.ProviderTypeToString(msp.FABRIC):
+	case msp.ProviderTypeToString(msp.FABRIC): //默认msptype = bsscp
 		mspInst, err = cache.New(mspInst)
 		if err != nil {
 			mspLogger.Fatalf("Failed to initialize local MSP, received err %+v", err)

@@ -42,13 +42,13 @@ func NewConf(blockStorageDir string, maxBlockfileSize int) *Conf {
 }
 
 func (conf *Conf) getIndexDir() string {
-	return filepath.Join(conf.blockStorageDir, IndexDir) //账本存放路径/index/
+	return filepath.Join(conf.blockStorageDir, IndexDir) //账本存放路径/index/  即 /var/hyperledger/production/ledgersData/chains/index
 }
 
 func (conf *Conf) getChainsDir() string {
-	return filepath.Join(conf.blockStorageDir, ChainsDir)
+	return filepath.Join(conf.blockStorageDir, ChainsDir) ///var/hyperledger/production/ledgersData/chains/chains
 }
 
 func (conf *Conf) getLedgerBlockDir(ledgerid string) string {
-	return filepath.Join(conf.getChainsDir(), ledgerid)
+	return filepath.Join(conf.getChainsDir(), ledgerid) // /var/hyperledger/production/ledgersData/chains/chains/${通道名称}
 }

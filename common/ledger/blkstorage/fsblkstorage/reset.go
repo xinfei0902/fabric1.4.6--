@@ -17,12 +17,12 @@ import (
 
 func ResetBlockStore(blockStorageDir string) error {
 	conf := &Conf{blockStorageDir: blockStorageDir}
-	indexDir := conf.getIndexDir()
+	indexDir := conf.getIndexDir() //获取路径  /var/hyperledger/production/ledgersData/chains/index
 	logger.Infof("Dropping the index dir [%s]... if present", indexDir)
-	if err := os.RemoveAll(indexDir); err != nil {
+	if err := os.RemoveAll(indexDir); err != nil { //移除
 		return err
 	}
-	chainsDir := conf.getChainsDir()
+	chainsDir := conf.getChainsDir() ///var/hyperledger/production/ledgersData/chains/chains
 	chainsDirExists, err := pathExists(chainsDir)
 	if err != nil {
 		return err
@@ -31,7 +31,7 @@ func ResetBlockStore(blockStorageDir string) error {
 		logger.Infof("Dir [%s] missing... exiting", chainsDir)
 		return nil
 	}
-	ledgerIDs, err := util.ListSubdirs(chainsDir)
+	ledgerIDs, err := util.ListSubdirs(chainsDir) //获取 chains/chains目录下的所有目录名称 即通道
 	if err != nil {
 		return err
 	}
@@ -41,11 +41,11 @@ func ResetBlockStore(blockStorageDir string) error {
 	}
 	logger.Infof("Found ledgers - %s", ledgerIDs)
 	for _, ledgerID := range ledgerIDs {
-		ledgerDir := conf.getLedgerBlockDir(ledgerID)
-		if err := recordHeightIfGreaterThanPreviousRecording(ledgerDir); err != nil {
+		ledgerDir := conf.getLedgerBlockDir(ledgerID)                                 //获取上述路径
+		if err := recordHeightIfGreaterThanPreviousRecording(ledgerDir); err != nil { //记录当前最新块高度
 			return err
 		}
-		if err := resetToGenesisBlk(ledgerDir); err != nil {
+		if err := resetToGenesisBlk(ledgerDir); err != nil { //重置创世区块
 			return err
 		}
 	}
@@ -79,7 +79,7 @@ func resetToGenesisBlk(ledgerDir string) error {
 }
 
 func retrieveGenesisBlkOffsetAndMakeACopy(ledgerDir string) (string, int64, error) {
-	blockfilePath := deriveBlockfilePath(ledgerDir, 0)
+	blockfilePath := deriveBlockfilePath(ledgerDir, 0) //最开始块文件路径
 	blockfileStream, err := newBlockfileStream(ledgerDir, 0, 0)
 	if err != nil {
 		return "", -1, err
@@ -157,7 +157,7 @@ func recordHeightIfGreaterThanPreviousRecording(ledgerDir string) error {
 		logger.Infof("preResetHtFile contains height = %d", previuoslyRecordedHt)
 	}
 	currentHt := checkpointInfo.lastBlockNumber + 1
-	if currentHt > previuoslyRecordedHt {
+	if currentHt > previuoslyRecordedHt { //如果大于 覆盖
 		logger.Infof("Recording current height [%d]", currentHt)
 		return ioutil.WriteFile(preResetHtFile,
 			[]byte(strconv.FormatUint(currentHt, 10)),

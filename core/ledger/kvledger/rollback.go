@@ -22,7 +22,7 @@ func RollbackKVLedger(ledgerID string, blockNum uint64) error {
 	}
 	defer fileLock.Unlock()
 
-	blockstorePath := ledgerconfig.GetBlockStorePath()
+	blockstorePath := ledgerconfig.GetBlockStorePath() // /var/hyperledger/production/ledgersData/chains
 	if err := ledgerstorage.ValidateRollbackParams(blockstorePath, ledgerID, blockNum); err != nil {
 		return err
 	}

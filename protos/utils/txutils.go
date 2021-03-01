@@ -308,12 +308,12 @@ func GetSignedProposal(prop *peer.Proposal, signer msp.SigningIdentity) (*peer.S
 		return nil, errors.New("nil arguments")
 	}
 
-	propBytes, err := GetBytesProposal(prop)
+	propBytes, err := GetBytesProposal(prop) //转字节
 	if err != nil {
 		return nil, err
 	}
 
-	signature, err := signer.Sign(propBytes)
+	signature, err := signer.Sign(propBytes) //对字节签署
 	if err != nil {
 		return nil, err
 	}

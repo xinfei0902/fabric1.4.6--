@@ -132,29 +132,29 @@ func InitCmdFactory(isEndorserRequired, isPeerDeliverRequired, isOrdererRequired
 	var err error
 	cf := &ChannelCmdFactory{}
 
-	cf.Signer, err = common.GetDefaultSignerFnc()
+	cf.Signer, err = common.GetDefaultSignerFnc() //获得默认签名者 实现：fabric\peer\common\common.go No.159 line
 	if err != nil {
 		return nil, errors.WithMessage(err, "error getting default signer")
 	}
 
 	cf.BroadcastFactory = func() (common.BroadcastClient, error) {
-		return common.GetBroadcastClientFnc()
+		return common.GetBroadcastClientFnc() //根据orderer变量信息 构建广播客户端
 	}
 
 	// for join and list, we need the endorser as well
-	if isEndorserRequired {
+	if isEndorserRequired { //是否是背书请求
 		// creating an EndorserClient with these empty parameters will create a
 		// connection using the values of "peer.address" and
 		// "peer.tls.rootcert.file"
-		cf.EndorserClient, err = common.GetEndorserClientFnc(common.UndefinedParamValue, common.UndefinedParamValue)
+		cf.EndorserClient, err = common.GetEndorserClientFnc(common.UndefinedParamValue, common.UndefinedParamValue) //根据命令参数 建立需要与背书节点连接 客户端
 		if err != nil {
 			return nil, errors.WithMessage(err, "error getting endorser client for channel")
 		}
 	}
 
 	// for fetching blocks from a peer
-	if isPeerDeliverRequired {
-		cf.DeliverClient, err = common.NewDeliverClientForPeer(channelID, bestEffort)
+	if isPeerDeliverRequired { //是否是分发请求
+		cf.DeliverClient, err = common.NewDeliverClientForPeer(channelID, bestEffort) //根据自身节点信息 建立分发客户端
 		if err != nil {
 			return nil, errors.WithMessage(err, "error getting deliver client for channel")
 		}
@@ -162,10 +162,10 @@ func InitCmdFactory(isEndorserRequired, isPeerDeliverRequired, isOrdererRequired
 
 	// for create and fetch, we need the orderer as well
 	if isOrdererRequired {
-		if len(strings.Split(common.OrderingEndpoint, ":")) != 2 {
+		if len(strings.Split(common.OrderingEndpoint, ":")) != 2 { //命令请求格式判断 例如 --orderer orderer0.example.com:7050
 			return nil, errors.Errorf("ordering service endpoint %s is not valid or missing", common.OrderingEndpoint)
 		}
-		cf.DeliverClient, err = common.NewDeliverClientForOrderer(channelID, bestEffort)
+		cf.DeliverClient, err = common.NewDeliverClientForOrderer(channelID, bestEffort) //建立与orderer 客户端
 		if err != nil {
 			return nil, err
 		}

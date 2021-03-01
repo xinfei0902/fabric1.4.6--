@@ -31,7 +31,7 @@ func constructCheckpointInfoFromBlockFiles(rootDir string) (*checkpointInfo, err
 	var lastBlock *common.Block
 	var err error
 
-	if lastFileNum, err = retrieveLastFileSuffix(rootDir); err != nil {
+	if lastFileNum, err = retrieveLastFileSuffix(rootDir); err != nil { //获取最后一个blockfile_的后缀数字
 		return nil, err
 	}
 	logger.Debugf("Last file number found = %d", lastFileNum)
@@ -42,14 +42,14 @@ func constructCheckpointInfoFromBlockFiles(rootDir string) (*checkpointInfo, err
 		return cpInfo, nil
 	}
 
-	fileInfo := getFileInfoOrPanic(rootDir, lastFileNum)
+	fileInfo := getFileInfoOrPanic(rootDir, lastFileNum) //获取指定块文件 文件信息 包括文件名称 大小等
 	logger.Debugf("Last Block file info: FileName=[%s], FileSize=[%d]", fileInfo.Name(), fileInfo.Size())
 	if lastBlockBytes, endOffsetLastBlock, numBlocksInFile, err = scanForLastCompleteBlock(rootDir, lastFileNum, 0); err != nil {
 		logger.Errorf("Error scanning last file [num=%d]: %s", lastFileNum, err)
 		return nil, err
 	}
 
-	if numBlocksInFile == 0 && lastFileNum > 0 {
+	if numBlocksInFile == 0 && lastFileNum > 0 { //如果最后一个块为空 块减一去获取
 		secondLastFileNum := lastFileNum - 1
 		fileInfo := getFileInfoOrPanic(rootDir, secondLastFileNum)
 		logger.Debugf("Second last Block file info: FileName=[%s], FileSize=[%d]", fileInfo.Name(), fileInfo.Size())
@@ -132,7 +132,7 @@ func retrieveLastFileSuffix(rootDir string) (int, error) {
 		return -1, errors.Wrapf(err, "error reading dir %s", rootDir)
 	}
 	for _, fileInfo := range filesInfo {
-		name := fileInfo.Name()
+		name := fileInfo.Name() //获取文件名
 		if fileInfo.IsDir() || !isBlockFileName(name) {
 			logger.Debugf("Skipping File name = %s", name)
 			continue
@@ -143,7 +143,7 @@ func retrieveLastFileSuffix(rootDir string) (int, error) {
 			return -1, err
 		}
 		if fileNum > biggestFileNum {
-			biggestFileNum = fileNum
+			biggestFileNum = fileNum //挑选最后的
 		}
 	}
 	logger.Debugf("retrieveLastFileSuffix() - biggestFileNum = %d", biggestFileNum)
@@ -155,7 +155,7 @@ func isBlockFileName(name string) bool {
 }
 
 func getFileInfoOrPanic(rootDir string, fileNum int) os.FileInfo {
-	filePath := deriveBlockfilePath(rootDir, fileNum)
+	filePath := deriveBlockfilePath(rootDir, fileNum) //获取指定块文件路径
 	fileInfo, err := os.Lstat(filePath)
 	if err != nil {
 		panic(errors.Wrapf(err, "error retrieving file info for file number %d", fileNum))

@@ -58,9 +58,9 @@ type Provider struct {
 func NewProvider() (ledger.PeerLedgerProvider, error) {
 	logger.Info("Initializing ledger provider")
 	// Initialize the ID store (inventory of chainIds/ledgerIds)
-	idStore := openIDStore(ledgerconfig.GetLedgerProviderPath())
+	idStore := openIDStore(ledgerconfig.GetLedgerProviderPath()) //根据路径创建数据库
 	// Initialize the history database (index for history of values by key)
-	historydbProvider := historyleveldb.NewHistoryDBProvider()
+	historydbProvider := historyleveldb.NewHistoryDBProvider() //历史数据
 
 	fileLock := leveldbhelper.NewFileLock(ledgerconfig.GetFileLockPath())
 	if err := fileLock.Lock(); err != nil {
@@ -221,7 +221,7 @@ func (provider *Provider) recoverUnderConstructionLedger() {
 	logger.Infof("ledger [%s] found as under construction", ledgerID)
 	ledger, err := provider.openInternal(ledgerID)
 	panicOnErr(err, "Error while opening under construction ledger [%s]", ledgerID)
-	bcInfo, err := ledger.GetBlockchainInfo()
+	bcInfo, err := ledger.GetBlockchainInfo() //实现 fabric\core\ledger\kvledger\kv_ledger.go No.289 line
 	panicOnErr(err, "Error while getting blockchain info for the under construction ledger [%s]", ledgerID)
 	ledger.Close()
 
@@ -232,7 +232,7 @@ func (provider *Provider) recoverUnderConstructionLedger() {
 		panicOnErr(provider.idStore.unsetUnderConstructionFlag(), "Error while unsetting under construction flag")
 	case 1:
 		logger.Infof("Genesis block was committed. Hence, marking the peer ledger as created")
-		genesisBlock, err := ledger.GetBlockByNumber(0)
+		genesisBlock, err := ledger.GetBlockByNumber(0) //  fabric\core\ledger\kvledger\kv_ledger.go No.298 line
 		panicOnErr(err, "Error while retrieving genesis block from blockchain for ledger [%s]", ledgerID)
 		panicOnErr(provider.idStore.createLedgerID(ledgerID, genesisBlock), "Error while adding ledgerID [%s] to created list", ledgerID)
 	default:

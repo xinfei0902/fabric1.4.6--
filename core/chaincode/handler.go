@@ -178,12 +178,12 @@ type Handler struct {
 func (h *Handler) handleMessage(msg *pb.ChaincodeMessage) error {
 	chaincodeLogger.Debugf("[%s] Fabric side handling ChaincodeMessage of type: %s in state %s", shorttxid(msg.Txid), msg.Type, h.state)
 
-	if msg.Type == pb.ChaincodeMessage_KEEPALIVE {
+	if msg.Type == pb.ChaincodeMessage_KEEPALIVE { //peer侧检测收到消息是请求心跳连接 直接返回 与链码侧接收消息处理不一样
 		return nil
 	}
 
-	switch h.state {
-	case Created:
+	switch h.state { //这个状态检测
+	case Created: //当调用链码 建立对象（里面指定state=create）发送注册消息
 		return h.handleMessageCreatedState(msg)
 	case Ready:
 		return h.handleMessageReadyState(msg)
@@ -300,7 +300,7 @@ func shorttxid(txid string) string {
 
 // ParseName parses a chaincode name into a ChaincodeInstance. The name should
 // be of the form "chaincode-name:version/channel-name" with optional elements.
-func ParseName(ccName string) *sysccprovider.ChaincodeInstance {
+func ParseName(ccName string) *sysccprovider.ChaincodeInstance { //解析实例化链码信息 名称 版本
 	ci := &sysccprovider.ChaincodeInstance{}
 
 	z := strings.SplitN(ccName, "/", 2)
@@ -507,7 +507,7 @@ func (h *Handler) notifyRegistry(err error) {
 // handleRegister is invoked when chaincode tries to register.
 func (h *Handler) HandleRegister(msg *pb.ChaincodeMessage) {
 	chaincodeLogger.Debugf("Received %s in state %s", msg.Type, h.state)
-	chaincodeID := &pb.ChaincodeID{}
+	chaincodeID := &pb.ChaincodeID{} //链码信息
 	err := proto.Unmarshal(msg.Payload, chaincodeID)
 	if err != nil {
 		chaincodeLogger.Errorf("Error in received %s, could NOT unmarshal registration info: %s", pb.ChaincodeMessage_REGISTER, err)
@@ -516,7 +516,7 @@ func (h *Handler) HandleRegister(msg *pb.ChaincodeMessage) {
 
 	// Now register with the chaincodeSupport
 	h.chaincodeID = chaincodeID
-	err = h.Registry.Register(h)
+	err = h.Registry.Register(h) //将链码注册当前peer上 实现： fabric\core\chaincode\handler_registry.go No.128 line
 	if err != nil {
 		h.notifyRegistry(err)
 		return
@@ -524,21 +524,21 @@ func (h *Handler) HandleRegister(msg *pb.ChaincodeMessage) {
 
 	// get the component parts so we can use the root chaincode
 	// name in keys
-	h.ccInstance = ParseName(h.chaincodeID.Name)
+	h.ccInstance = ParseName(h.chaincodeID.Name) //从节点侧获取实例化节点的信息 名称 版本
 
 	chaincodeLogger.Debugf("Got %s for chaincodeID = %s, sending back %s", pb.ChaincodeMessage_REGISTER, chaincodeID, pb.ChaincodeMessage_REGISTERED)
-	if err := h.serialSend(&pb.ChaincodeMessage{Type: pb.ChaincodeMessage_REGISTERED}); err != nil {
+	if err := h.serialSend(&pb.ChaincodeMessage{Type: pb.ChaincodeMessage_REGISTERED}); err != nil { //将链码侧请求的register消息 返回给链码侧
 		chaincodeLogger.Errorf("error sending %s: %s", pb.ChaincodeMessage_REGISTERED, err)
 		h.notifyRegistry(err)
 		return
 	}
 
-	h.state = Established
+	h.state = Established //节点测 状态更改
 
 	chaincodeLogger.Debugf("Changed state to established for %+v", h.chaincodeID)
 
 	// for dev mode this will also move to ready automatically
-	h.notifyRegistry(nil)
+	h.notifyRegistry(nil) //向链码侧发送ready消息 更改peer侧状态
 }
 
 func (h *Handler) Notify(msg *pb.ChaincodeMessage) {

@@ -24,15 +24,15 @@ type OrdererClient struct {
 // NewOrdererClientFromEnv creates an instance of an OrdererClient from the
 // global Viper instance
 func NewOrdererClientFromEnv() (*OrdererClient, error) {
-	address, override, clientConfig, err := configFromEnv("orderer")
+	address, override, clientConfig, err := configFromEnv("orderer") //根据配置变量构建客户端配置
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to load config for OrdererClient")
 	}
-	gClient, err := comm.NewGRPCClient(clientConfig)
+	gClient, err := comm.NewGRPCClient(clientConfig) //构建grpc客户端选项 证书 保证心跳响应 接收发送最大字节等
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to create OrdererClient from config")
 	}
-	oClient := &OrdererClient{
+	oClient := &OrdererClient{ //构建orderer客户端，其中有grpc连接配置选项
 		commonClient: commonClient{
 			GRPCClient: gClient,
 			address:    address,

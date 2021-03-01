@@ -42,7 +42,7 @@ type DeliverClient struct {
 	BestEffort  bool
 }
 
-func (d *DeliverClient) seekSpecified(blockNumber uint64) error {
+func (d *DeliverClient) seekSpecified(blockNumber uint64) error { //根据特定区块高度去寻找
 	seekPosition := &ab.SeekPosition{
 		Type: &ab.SeekPosition_Specified{
 			Specified: &ab.SeekSpecified{
@@ -54,7 +54,7 @@ func (d *DeliverClient) seekSpecified(blockNumber uint64) error {
 	return d.Service.Send(env)
 }
 
-func (d *DeliverClient) seekOldest() error {
+func (d *DeliverClient) seekOldest() error { // peer channel fetch oldest/newset/config 命令
 	env := seekHelper(d.ChannelID, seekOldest, d.TLSCertHash, d.BestEffort)
 	return d.Service.Send(env)
 }
@@ -84,7 +84,7 @@ func (d *DeliverClient) readBlock() (*cb.Block, error) {
 
 // GetSpecifiedBlock gets the specified block from a peer/orderer's deliver
 // service
-func (d *DeliverClient) GetSpecifiedBlock(num uint64) (*cb.Block, error) {
+func (d *DeliverClient) GetSpecifiedBlock(num uint64) (*cb.Block, error) { //获取指定的区块
 	err := d.seekSpecified(num)
 	if err != nil {
 		return nil, errors.WithMessage(err, "error getting specified block")
@@ -94,7 +94,7 @@ func (d *DeliverClient) GetSpecifiedBlock(num uint64) (*cb.Block, error) {
 }
 
 // GetOldestBlock gets the oldest block from a peer/orderer's deliver service
-func (d *DeliverClient) GetOldestBlock() (*cb.Block, error) {
+func (d *DeliverClient) GetOldestBlock() (*cb.Block, error) { //peer channel fetch oldest/newset/config 命令
 	err := d.seekOldest()
 	if err != nil {
 		return nil, errors.WithMessage(err, "error getting oldest block")
@@ -104,7 +104,7 @@ func (d *DeliverClient) GetOldestBlock() (*cb.Block, error) {
 }
 
 // GetNewestBlock gets the newest block from a peer/orderer's deliver service
-func (d *DeliverClient) GetNewestBlock() (*cb.Block, error) {
+func (d *DeliverClient) GetNewestBlock() (*cb.Block, error) { //peer channel fetch oldest/newset/config 命令
 	err := d.seekNewest()
 	if err != nil {
 		return nil, errors.WithMessage(err, "error getting newest block")

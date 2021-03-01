@@ -151,7 +151,7 @@ func (dmt *deliverMsgTracer) Recv() (*cb.Envelope, error) {
 }
 
 // Broadcast receives a stream of messages from a client for ordering
-func (s *server) Broadcast(srv ab.AtomicBroadcast_BroadcastServer) error {
+func (s *server) Broadcast(srv ab.AtomicBroadcast_BroadcastServer) error { //广播服务 接收peer广播的信封（envelope）
 	logger.Debugf("Starting new Broadcast handler")
 	defer func() {
 		if r := recover(); r != nil {

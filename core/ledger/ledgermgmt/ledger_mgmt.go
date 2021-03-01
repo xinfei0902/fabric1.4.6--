@@ -66,11 +66,11 @@ func initialize(initializer *Initializer) {
 		initializer.DeployedChaincodeInfoProvider,
 	})
 	finalStateListeners := addListenerForCCEventsHandler(initializer.DeployedChaincodeInfoProvider, []ledger.StateListener{})
-	provider, err := kvledger.NewProvider()
+	provider, err := kvledger.NewProvider() //peer账本
 	if err != nil {
 		panic(errors.WithMessage(err, "Error in instantiating ledger provider"))
 	}
-	err = provider.Initialize(&ledger.Initializer{
+	err = provider.Initialize(&ledger.Initializer{ //实现： fabric\core\ledger\kvledger\kv_ledger_provider.go No.78 line
 		StateListeners:                finalStateListeners,
 		DeployedChaincodeInfoProvider: initializer.DeployedChaincodeInfoProvider,
 		MembershipInfoProvider:        initializer.MembershipInfoProvider,

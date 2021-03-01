@@ -65,13 +65,13 @@ func (e ProposalFailedErr) Error() string {
 }
 
 func getJoinCCSpec() (*pb.ChaincodeSpec, error) {
-	if genesisBlockPath == common.UndefinedParamValue {
+	if genesisBlockPath == common.UndefinedParamValue { //genesisBlockPath 是加入通道命令行 -b 指定的区块文件
 		return nil, errors.New("Must supply genesis block file")
 	}
 
-	gb, err := ioutil.ReadFile(genesisBlockPath) //本地 ***.block文件  命令行 -b指定
+	gb, err := ioutil.ReadFile(genesisBlockPath) //本地 ***.block文件  命令行 -b指定文件路径
 	if err != nil {
-		return nil, GBFileNotFoundErr(err.Error())
+		return nil, GBFileNotFoundErr(err.Error()) //genesis block file not found %s
 	}
 	// Build the spec
 	input := &pb.ChaincodeInput{Args: [][]byte{[]byte(cscc.JoinChain), gb}}
@@ -94,7 +94,7 @@ func executeJoin(cf *ChannelCmdFactory) (err error) {
 	// Build the ChaincodeInvocationSpec message
 	invocation := &pb.ChaincodeInvocationSpec{ChaincodeSpec: spec}
 
-	creator, err := cf.Signer.Serialize()
+	creator, err := cf.Signer.Serialize() //获取创建者身份 用于之后提案与签名
 	if err != nil {
 		return fmt.Errorf("Error serializing identity for %s: %s", cf.Signer.GetIdentifier(), err)
 	}
@@ -106,7 +106,7 @@ func executeJoin(cf *ChannelCmdFactory) (err error) {
 	}
 
 	var signedProp *pb.SignedProposal
-	signedProp, err = putils.GetSignedProposal(prop, cf.Signer) //对提案签署
+	signedProp, err = putils.GetSignedProposal(prop, cf.Signer) //对提案签名
 	if err != nil {
 		return fmt.Errorf("Error creating signed proposal %s", err)
 	}

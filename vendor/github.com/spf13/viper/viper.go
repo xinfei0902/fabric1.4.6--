@@ -968,7 +968,7 @@ func (v *Viper) getConfigFile() string {
 		return v.configFile
 	}
 
-	cf, err := v.findConfigFile() //返回配置文件名称 /etc/hyperledger/orderer.yaml
+	cf, err := v.findConfigFile() //返回配置文件名称 /etc/hyperledger/orderer.yaml core.yaml
 	if err != nil {
 		return ""
 	}

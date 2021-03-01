@@ -467,7 +467,7 @@ func TestEnhancedExactUnmarshalKey(t *testing.T) {
 	os.Setenv(envVar, envVal)
 	defer os.Unsetenv(envVar)
 
-	viper.SetEnvPrefix(Prefix)
+	viper.SetEnvPrefix(Prefix) //const Prefix = "VIPERUTIL"
 	defer viper.Reset()
 	viper.AutomaticEnv()
 	replacer := strings.NewReplacer(".", "_")

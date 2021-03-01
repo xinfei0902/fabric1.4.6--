@@ -34,7 +34,7 @@ type viperGetter func(key string) interface{}
 func getKeysRecursively(base string, getKey viperGetter, nodeKeys map[string]interface{}, oType reflect.Type) map[string]interface{} {
 	subTypes := map[string]reflect.Type{}
 
-	if oType != nil && oType.Kind() == reflect.Struct {
+	if oType != nil && oType.Kind() == reflect.Struct { //oType == nil 不进入
 	outer:
 		for i := 0; i < oType.NumField(); i++ {
 			fieldName := oType.Field(i).Name
@@ -54,7 +54,7 @@ func getKeysRecursively(base string, getKey viperGetter, nodeKeys map[string]int
 
 	result := make(map[string]interface{})
 	for key := range nodeKeys {
-		fqKey := base + key
+		fqKey := base + key //fqkey=""+"peer.BCCSP"
 
 		val := getKey(fqKey)
 		if m, ok := val.(map[interface{}]interface{}); ok {
@@ -366,7 +366,7 @@ func EnhancedExactUnmarshal(v *viper.Viper, output interface{}) error {
 func EnhancedExactUnmarshalKey(baseKey string, output interface{}) error {
 	m := make(map[string]interface{})
 	m[baseKey] = nil
-	leafKeys := getKeysRecursively("", viper.Get, m, nil)
+	leafKeys := getKeysRecursively("", viper.Get, m, nil) //递归解析变量获取key和value 如果里面代码没有看懂 可以在./config_test.go No.448 line 使用debug test模式跑一下 把yaml:= 示例想象成peer配置文件中的core.yaml文件中的 peer.Bsscp
 
 	logger.Debugf("%+v", leafKeys)
 

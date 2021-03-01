@@ -42,7 +42,7 @@ func NewDefaultACLProvider() ACLProvider {
 	return d
 }
 
-func (d *defaultACLProvider) initialize() {
+func (d *defaultACLProvider) initialize() { //构建系统链码 策略
 	d.policyChecker = policy.NewPolicyChecker(
 		peer.NewChannelPolicyManagerGetter(),
 		mgmt.GetLocalMSP(),

@@ -84,14 +84,14 @@ func (s *SystemChannel) ProcessNormalMsg(msg *cb.Envelope) (configSeq uint64, er
 // or, for channel creation.  In the channel creation case, the CONFIG_UPDATE is wrapped into a resulting
 // ORDERER_TRANSACTION, and in the standard CONFIG_UPDATE case, a resulting CONFIG message
 func (s *SystemChannel) ProcessConfigUpdateMsg(envConfigUpdate *cb.Envelope) (config *cb.Envelope, configSeq uint64, err error) {
-	channelID, err := utils.ChannelID(envConfigUpdate)
+	channelID, err := utils.ChannelID(envConfigUpdate) //从通道头部里获取通道名称
 	if err != nil {
 		return nil, 0, err
 	}
 
 	logger.Debugf("Processing config update tx with system channel message processor for channel ID %s", channelID)
 
-	if channelID == s.support.ChainID() {
+	if channelID == s.support.ChainID() { //获取的通道名师 是否存在与标准通道（即自己创建通道 非系统通道）
 		return s.StandardChannel.ProcessConfigUpdateMsg(envConfigUpdate)
 	}
 
@@ -101,17 +101,17 @@ func (s *SystemChannel) ProcessConfigUpdateMsg(envConfigUpdate *cb.Envelope) (co
 
 	// If the channel ID does not match the system channel, then this must be a channel creation transaction
 
-	bundle, err := s.templator.NewChannelConfig(envConfigUpdate)
+	bundle, err := s.templator.NewChannelConfig(envConfigUpdate) //实现方法： 当前文件 No.217 line
 	if err != nil {
 		return nil, 0, err
 	}
 
-	newChannelConfigEnv, err := bundle.ConfigtxValidator().ProposeConfigUpdate(envConfigUpdate)
+	newChannelConfigEnv, err := bundle.ConfigtxValidator().ProposeConfigUpdate(envConfigUpdate) //对配置进行验证
 	if err != nil {
 		return nil, 0, errors.WithMessage(err, fmt.Sprintf("error validating channel creation transaction for new channel '%s', could not succesfully apply update to template configuration", channelID))
 	}
 
-	newChannelEnvConfig, err := utils.CreateSignedEnvelope(cb.HeaderType_CONFIG, channelID, s.support.Signer(), newChannelConfigEnv, msgVersion, epoch)
+	newChannelEnvConfig, err := utils.CreateSignedEnvelope(cb.HeaderType_CONFIG, channelID, s.support.Signer(), newChannelConfigEnv, msgVersion, epoch) //验证完之后 对其签名
 	if err != nil {
 		return nil, 0, err
 	}
@@ -126,7 +126,7 @@ func (s *SystemChannel) ProcessConfigUpdateMsg(envConfigUpdate *cb.Envelope) (co
 	// check, which although not strictly necessary, is a good sanity check, in case the orderer
 	// has not been configured with the right cert material.  The additional overhead of the signature
 	// check is negligible, as this is the channel creation path and not the normal path.
-	err = s.StandardChannel.filters.Apply(wrappedOrdererTransaction)
+	err = s.StandardChannel.filters.Apply(wrappedOrdererTransaction) //最后对签署交易 大小 签名检查
 	if err != nil {
 		return nil, 0, err
 	}
@@ -214,13 +214,13 @@ func NewDefaultTemplator(support DefaultTemplatorSupport) *DefaultTemplator {
 }
 
 // NewChannelConfig creates a new template channel configuration based on the current config in the ordering system channel.
-func (dt *DefaultTemplator) NewChannelConfig(envConfigUpdate *cb.Envelope) (channelconfig.Resources, error) {
-	configUpdatePayload, err := utils.UnmarshalPayload(envConfigUpdate.Payload)
+func (dt *DefaultTemplator) NewChannelConfig(envConfigUpdate *cb.Envelope) (channelconfig.Resources, error) { //此函数可以参考配置块和config.yaml信息对着学习
+	configUpdatePayload, err := utils.UnmarshalPayload(envConfigUpdate.Payload) //反序列化 获取payload
 	if err != nil {
 		return nil, fmt.Errorf("Failing initial channel config creation because of payload unmarshaling error: %s", err)
 	}
 
-	configUpdateEnv, err := configtx.UnmarshalConfigUpdateEnvelope(configUpdatePayload.Data)
+	configUpdateEnv, err := configtx.UnmarshalConfigUpdateEnvelope(configUpdatePayload.Data) //不过多解析
 	if err != nil {
 		return nil, fmt.Errorf("Failing initial channel config creation because of config update envelope unmarshaling error: %s", err)
 	}
@@ -229,17 +229,17 @@ func (dt *DefaultTemplator) NewChannelConfig(envConfigUpdate *cb.Envelope) (chan
 		return nil, fmt.Errorf("Failed initial channel config creation because config update header was missing")
 	}
 
-	channelHeader, err := utils.UnmarshalChannelHeader(configUpdatePayload.Header.ChannelHeader)
+	channelHeader, err := utils.UnmarshalChannelHeader(configUpdatePayload.Header.ChannelHeader) //不过多解析
 	if err != nil {
 		return nil, fmt.Errorf("Failed initial channel config creation because channel header was malformed: %s", err)
 	}
 
-	configUpdate, err := configtx.UnmarshalConfigUpdate(configUpdateEnv.ConfigUpdate)
+	configUpdate, err := configtx.UnmarshalConfigUpdate(configUpdateEnv.ConfigUpdate) //不过多解析
 	if err != nil {
 		return nil, fmt.Errorf("Failing initial channel config creation because of config update unmarshaling error: %s", err)
 	}
 
-	if configUpdate.ChannelId != channelHeader.ChannelId {
+	if configUpdate.ChannelId != channelHeader.ChannelId { //更新配置通道名称 ！= 头部通道名称
 		return nil, fmt.Errorf("Failing initial channel config creation: mismatched channel IDs: '%s' != '%s'", configUpdate.ChannelId, channelHeader.ChannelId)
 	}
 
@@ -255,7 +255,7 @@ func (dt *DefaultTemplator) NewChannelConfig(envConfigUpdate *cb.Envelope) (chan
 		return nil, fmt.Errorf("Config update for channel creation does not set application group version to 1, was %d", uv)
 	}
 
-	consortiumConfigValue, ok := configUpdate.WriteSet.Values[channelconfig.ConsortiumKey]
+	consortiumConfigValue, ok := configUpdate.WriteSet.Values[channelconfig.ConsortiumKey] //获取联盟配置信息
 	if !ok {
 		return nil, fmt.Errorf("Consortium config value missing")
 	}
@@ -266,7 +266,7 @@ func (dt *DefaultTemplator) NewChannelConfig(envConfigUpdate *cb.Envelope) (chan
 		return nil, fmt.Errorf("Error reading unmarshaling consortium name: %s", err)
 	}
 
-	applicationGroup := cb.NewConfigGroup()
+	applicationGroup := cb.NewConfigGroup() //构建一个配置组（group）看配置块信息清楚结构了
 	consortiumsConfig, ok := dt.support.ConsortiumsConfig()
 	if !ok {
 		return nil, fmt.Errorf("The ordering system channel does not appear to support creating channels")

@@ -14,7 +14,7 @@ import (
 
 // ResetAllKVLedgers resets all ledger to the genesis block.
 func ResetAllKVLedgers() error {
-	fileLock := leveldbhelper.NewFileLock(ledgerconfig.GetFileLockPath())
+	fileLock := leveldbhelper.NewFileLock(ledgerconfig.GetFileLockPath()) //GetFileLockPath == /var/hyperledger/production/ledgersData/fileLock
 	if err := fileLock.Lock(); err != nil {
 		return errors.Wrap(err, "as another peer node command is executing,"+
 			" wait for that command to complete its execution or terminate it before retrying")
@@ -22,15 +22,16 @@ func ResetAllKVLedgers() error {
 	defer fileLock.Unlock()
 
 	logger.Info("Resetting all ledgers to genesis block")
-	ledgerDataFolder := ledgerconfig.GetRootPath()
+	ledgerDataFolder := ledgerconfig.GetRootPath() // /var/hyperledger/production/ledgersData
 	logger.Infof("Ledger data folder from config = [%s]", ledgerDataFolder)
 
-	if err := dropDBs(); err != nil {
+	if err := dropDBs(); err != nil { //清楚各种数据
 		return err
 	}
 
-	if err := resetBlockStorage(); err != nil {
+	if err := resetBlockStorage(); err != nil { //重置区块
 		return err
+
 	}
 	logger.Info("All channel ledgers have been successfully reset to the genesis block")
 	return nil
@@ -50,7 +51,7 @@ func ClearPreResetHeight() error {
 }
 
 func resetBlockStorage() error {
-	blockstorePath := ledgerconfig.GetBlockStorePath()
+	blockstorePath := ledgerconfig.GetBlockStorePath() // /var/hyperledger/production/ledgersData/chains
 	logger.Infof("Resetting BlockStore to genesis block at location [%s]", blockstorePath)
 	return fsblkstorage.ResetBlockStore(blockstorePath)
 }

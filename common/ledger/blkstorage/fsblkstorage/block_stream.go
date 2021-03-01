@@ -52,7 +52,7 @@ type blockPlacementInfo struct {
 // blockfileStream functions
 ////////////////////////////////////
 func newBlockfileStream(rootDir string, fileNum int, startOffset int64) (*blockfileStream, error) {
-	filePath := deriveBlockfilePath(rootDir, fileNum)
+	filePath := deriveBlockfilePath(rootDir, fileNum) //最后块文件路径
 	logger.Debugf("newBlockfileStream(): filePath=[%s], startOffset=[%d]", filePath, startOffset)
 	var file *os.File
 	var err error

@@ -66,7 +66,7 @@ func NewRegistry(platformTypes ...Platform) *Registry {
 	}
 	return &Registry{
 		Platforms:     platforms,
-		PackageWriter: PackageWriterWrapper(cutil.WriteBytesToPackage),
+		PackageWriter: PackageWriterWrapper(cutil.WriteBytesToPackage), //打包
 	}
 }
 
@@ -75,7 +75,7 @@ func (r *Registry) ValidateSpec(ccType, path string) error {
 	if !ok {
 		return fmt.Errorf("Unknown chaincodeType: %s", ccType)
 	}
-	return platform.ValidatePath(path)
+	return platform.ValidatePath(path) //最后实现 根据不同的语言去找对应实现 比如golang 实现：当前目录 ./golang/platform.go No.97 line
 }
 
 func (r *Registry) ValidateDeploymentSpec(ccType string, codePackage []byte) error {
@@ -100,7 +100,7 @@ func (r *Registry) GetDeploymentPayload(ccType, path string) ([]byte, error) {
 		return nil, fmt.Errorf("Unknown chaincodeType: %s", ccType)
 	}
 
-	return platform.GetDeploymentPayload(path)
+	return platform.GetDeploymentPayload(path) //GetDeploymentPayload 实现方法：还是要看platform是什么 如果是golang 那实现方法在 同级目录golang/platform.go No.248 line
 }
 
 func (r *Registry) GenerateDockerfile(ccType, name, version string) (string, error) {

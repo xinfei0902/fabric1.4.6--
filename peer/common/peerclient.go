@@ -29,11 +29,11 @@ type PeerClient struct {
 // NewPeerClientFromEnv creates an instance of a PeerClient from the global
 // Viper instance
 func NewPeerClientFromEnv() (*PeerClient, error) {
-	address, override, clientConfig, err := configFromEnv("peer")
+	address, override, clientConfig, err := configFromEnv("peer") //从环境变量获取配置信息
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to load config for PeerClient")
 	}
-	return newPeerClientForClientConfig(address, override, clientConfig)
+	return newPeerClientForClientConfig(address, override, clientConfig) //从刚才获取配置信息建立客户端
 }
 
 // NewPeerClientForAddress creates an instance of a PeerClient using the
@@ -83,7 +83,7 @@ func NewPeerClientForAddress(address, tlsRootCertFile string) (*PeerClient, erro
 }
 
 func newPeerClientForClientConfig(address, override string, clientConfig comm.ClientConfig) (*PeerClient, error) {
-	gClient, err := comm.NewGRPCClient(clientConfig)
+	gClient, err := comm.NewGRPCClient(clientConfig) //根据配置构建grpc客户端
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to create PeerClient from config")
 	}
@@ -145,7 +145,7 @@ func (pc *PeerClient) Certificate() tls.Certificate {
 func GetEndorserClient(address, tlsRootCertFile string) (pb.EndorserClient, error) {
 	var peerClient *PeerClient
 	var err error
-	if address != "" {
+	if address != "" { // address 源自命令参数--address  --tlsTootCertFile
 		peerClient, err = NewPeerClientForAddress(address, tlsRootCertFile)
 	} else {
 		peerClient, err = NewPeerClientFromEnv()
@@ -158,7 +158,7 @@ func GetEndorserClient(address, tlsRootCertFile string) (pb.EndorserClient, erro
 
 // GetCertificate returns the client's TLS certificate
 func GetCertificate() (tls.Certificate, error) {
-	peerClient, err := NewPeerClientFromEnv()
+	peerClient, err := NewPeerClientFromEnv() //从环境变量获取信息 构建grpc客户端
 	if err != nil {
 		return tls.Certificate{}, err
 	}

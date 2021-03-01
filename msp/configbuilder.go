@@ -159,7 +159,7 @@ func SetupBCCSPKeystoreConfig(bccspConfig *factory.FactoryOpts, keystoreDir stri
 // directory, with the specified ID and type
 func GetLocalMspConfigWithType(dir string, bccspConfig *factory.FactoryOpts, ID, mspType string) (*msp.MSPConfig, error) {
 	switch mspType {
-	case ProviderTypeToString(FABRIC):
+	case ProviderTypeToString(FABRIC): //值为 bsscp 默认mspType = bsscp
 		return GetLocalMspConfig(dir, bccspConfig, ID)
 	case ProviderTypeToString(IDEMIX):
 		return GetIdemixMspConfig(dir, ID)

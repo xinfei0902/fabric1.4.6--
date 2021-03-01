@@ -36,13 +36,13 @@ func NewGRPCClient(config ClientConfig) (*GRPCClient, error) {
 	client := &GRPCClient{}
 
 	// parse secure options
-	err := client.parseSecureOptions(config.SecOpts)
+	err := client.parseSecureOptions(config.SecOpts) //构建客户端证书体系
 	if err != nil {
 		return client, err
 	}
 
 	// keepalive options
-	var kap keepalive.ClientParameters
+	var kap keepalive.ClientParameters //构建客户端 建立联系保持心跳和超时选项
 	if config.KaOpts != nil {
 		kap = keepalive.ClientParameters{
 			Time:    config.KaOpts.ClientInterval,
@@ -71,16 +71,16 @@ func NewGRPCClient(config ClientConfig) (*GRPCClient, error) {
 
 func (client *GRPCClient) parseSecureOptions(opts *SecureOptions) error {
 
-	if opts == nil || !opts.UseTLS {
+	if opts == nil || !opts.UseTLS { //如果不需要tls证书 返回空 即配置peer 中的enable为false
 		return nil
 	}
 	client.tlsConfig = &tls.Config{
 		VerifyPeerCertificate: opts.VerifyCertificate,
 		MinVersion:            tls.VersionTLS12} // TLS 1.2 only
 	if len(opts.ServerRootCAs) > 0 {
-		client.tlsConfig.RootCAs = x509.NewCertPool()
+		client.tlsConfig.RootCAs = x509.NewCertPool() //建立证书受信任池
 		for _, certBytes := range opts.ServerRootCAs {
-			err := AddPemToCertPool(certBytes, client.tlsConfig.RootCAs)
+			err := AddPemToCertPool(certBytes, client.tlsConfig.RootCAs) //把证书添加到客户端受信任池中
 			if err != nil {
 				commLogger.Debugf("error adding root certificate: %v", err)
 				return errors.WithMessage(err,
@@ -93,13 +93,13 @@ func (client *GRPCClient) parseSecureOptions(opts *SecureOptions) error {
 		if opts.Key != nil &&
 			opts.Certificate != nil {
 			cert, err := tls.X509KeyPair(opts.Certificate,
-				opts.Key)
+				opts.Key) // pem编码格式公私钥 结合生成tls证书
 			if err != nil {
 				return errors.WithMessage(err, "failed to "+
 					"load client certificate")
 			}
 			client.tlsConfig.Certificates = append(
-				client.tlsConfig.Certificates, cert)
+				client.tlsConfig.Certificates, cert) //把证书添加到tls配置证书位置
 		} else {
 			return errors.New("both Key and Certificate " +
 				"are required when using mutual TLS")

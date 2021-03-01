@@ -23,7 +23,7 @@ func dropDBs() error {
 	// command fails before dropping the stateDB, peer cannot start with consistent data (if the
 	// user decides to start the peer without retrying the reset/rollback) as the stateDB would
 	// not be rebuilt.
-	if err := dropStateLevelDB(); err != nil {
+	if err := dropStateLevelDB(); err != nil { //删除
 		return err
 	}
 	if err := dropConfigHistoryDB(); err != nil {
@@ -39,9 +39,9 @@ func dropDBs() error {
 }
 
 func dropStateLevelDB() error {
-	stateLeveldbPath := ledgerconfig.GetStateLevelDBPath()
+	stateLeveldbPath := ledgerconfig.GetStateLevelDBPath() ///var/hyperledger/production/ledgersData/stateLeveldb
 	logger.Infof("Dropping StateLevelDB at location [%s]", stateLeveldbPath)
-	err := os.RemoveAll(stateLeveldbPath)
+	err := os.RemoveAll(stateLeveldbPath) //移除
 	return errors.Wrapf(err, "error removing the StateLevelDB located at %s", stateLeveldbPath)
 }
 
@@ -61,7 +61,7 @@ func dropBookkeeperDB() error {
 }
 
 func dropHistoryDB() error {
-	histroryDBPath := ledgerconfig.GetHistoryLevelDBPath()
+	histroryDBPath := ledgerconfig.GetHistoryLevelDBPath() ///var/hyperledger/production/ledgersData/historyLeveldb
 	logger.Infof("Dropping HistoryDB at location [%s]", histroryDBPath)
 	err := os.RemoveAll(histroryDBPath)
 	return errors.Wrapf(err, "error removing the HistoryDB located at %s", histroryDBPath)

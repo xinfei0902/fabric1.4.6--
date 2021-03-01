@@ -49,7 +49,7 @@ func checkSpec(spec *pb.ChaincodeSpec) error {
 // getChaincodeDeploymentSpec get chaincode deployment spec given the chaincode spec
 func getChaincodeDeploymentSpec(spec *pb.ChaincodeSpec, crtPkg bool) (*pb.ChaincodeDeploymentSpec, error) {
 	var codePackageBytes []byte
-	if chaincode.IsDevMode() == false && crtPkg {
+	if chaincode.IsDevMode() == false && crtPkg { //是否指定开发模式
 		var err error
 		if err = checkSpec(spec); err != nil {
 			return nil, err
@@ -75,7 +75,7 @@ func getChaincodeSpec(cmd *cobra.Command) (*pb.ChaincodeSpec, error) {
 	}
 
 	// Build the spec
-	input := &pb.ChaincodeInput{}
+	input := &pb.ChaincodeInput{} //保存用户链码定义功能和参数
 	if err := json.Unmarshal([]byte(chaincodeCtorJSON), &input); err != nil {
 		return spec, errors.Wrap(err, "chaincode argument error")
 	}
@@ -333,11 +333,11 @@ func validatePeerConnectionParameters(cmdName string) error {
 
 // ChaincodeCmdFactory holds the clients used by ChaincodeCmd
 type ChaincodeCmdFactory struct {
-	EndorserClients []pb.EndorserClient
-	DeliverClients  []api.PeerDeliverClient
-	Certificate     tls.Certificate
-	Signer          msp.SigningIdentity
-	BroadcastClient common.BroadcastClient
+	EndorserClients []pb.EndorserClient     //背书节点客户端  ## 用于向背书节点发送消息
+	DeliverClients  []api.PeerDeliverClient //节点分发客户端 #用于与Order节点通信
+	Certificate     tls.Certificate         //tls证书相关
+	Signer          msp.SigningIdentity     //签名
+	BroadcastClient common.BroadcastClient  //用于广播消息
 }
 
 // InitCmdFactory init the ChaincodeCmdFactory with default clients
@@ -345,7 +345,7 @@ func InitCmdFactory(cmdName string, isEndorserRequired, isOrdererRequired bool) 
 	var err error
 	var endorserClients []pb.EndorserClient
 	var deliverClients []api.PeerDeliverClient
-	if isEndorserRequired { //true
+	if isEndorserRequired { //true 是否是背书请求 比如invoke交易  query就不需要 为false
 		if err = validatePeerConnectionParameters(cmdName); err != nil { //验证请求连接参数
 			return nil, errors.WithMessage(err, "error validating peer connection parameters")
 		}
@@ -354,12 +354,12 @@ func InitCmdFactory(cmdName string, isEndorserRequired, isOrdererRequired bool) 
 			if tlsRootCertFiles != nil {
 				tlsRootCertFile = tlsRootCertFiles[i]
 			}
-			endorserClient, err := common.GetEndorserClientFnc(address, tlsRootCertFile)
+			endorserClient, err := common.GetEndorserClientFnc(address, tlsRootCertFile) //建立与背书节点连接的客户端  实现方法：github.com\hyperledger\fabric\peer\common\peerclient.go No.145 line
 			if err != nil {
 				return nil, errors.WithMessage(err, fmt.Sprintf("error getting endorser client for %s", cmdName))
 			}
-			endorserClients = append(endorserClients, endorserClient)
-			deliverClient, err := common.GetPeerDeliverClientFnc(address, tlsRootCertFile)
+			endorserClients = append(endorserClients, endorserClient)                      // 多个背书客户端  还记得交易命令指定多个地址 多个证书吗 --peerAddresses --tlsRootCertFiles
+			deliverClient, err := common.GetPeerDeliverClientFnc(address, tlsRootCertFile) //建立deliver客户端
 			if err != nil {
 				return nil, errors.WithMessage(err, fmt.Sprintf("error getting deliver client for %s", cmdName))
 			}
@@ -369,12 +369,12 @@ func InitCmdFactory(cmdName string, isEndorserRequired, isOrdererRequired bool) 
 			return nil, errors.New("no endorser clients retrieved - this might indicate a bug")
 		}
 	}
-	certificate, err := common.GetCertificateFnc()
+	certificate, err := common.GetCertificateFnc() //构建peer grpc客户端 返回客户端规则中证书
 	if err != nil {
 		return nil, errors.WithMessage(err, "error getting client cerificate")
 	}
 
-	signer, err := common.GetDefaultSignerFnc()
+	signer, err := common.GetDefaultSignerFnc() //获取用在签名
 	if err != nil {
 		return nil, errors.WithMessage(err, "error getting default signer")
 	}
@@ -387,7 +387,7 @@ func InitCmdFactory(cmdName string, isEndorserRequired, isOrdererRequired bool) 
 			}
 			endorserClient := endorserClients[0]
 
-			orderingEndpoints, err := common.GetOrdererEndpointOfChainFnc(channelID, signer, endorserClient)
+			orderingEndpoints, err := common.GetOrdererEndpointOfChainFnc(channelID, signer, endorserClient) //获取ordererAddress
 			if err != nil {
 				return nil, errors.WithMessage(err, fmt.Sprintf("error getting channel (%s) orderer endpoint", channelID))
 			}
@@ -396,7 +396,7 @@ func InitCmdFactory(cmdName string, isEndorserRequired, isOrdererRequired bool) 
 			}
 			logger.Infof("Retrieved channel (%s) orderer endpoint: %s", channelID, orderingEndpoints[0])
 			// override viper env
-			viper.Set("orderer.address", orderingEndpoints[0])
+			viper.Set("orderer.address", orderingEndpoints[0]) //把地址写入viper的store中
 		}
 
 		broadcastClient, err = common.GetBroadcastClientFnc()
@@ -437,7 +437,7 @@ func ChaincodeInvokeOrQuery(
 	// Build the ChaincodeInvocationSpec message
 	invocation := &pb.ChaincodeInvocationSpec{ChaincodeSpec: spec}
 
-	creator, err := signer.Serialize()
+	creator, err := signer.Serialize() //具体可以看一下解析区块中的signature_header这个结构 就很清楚了 实现：fabric\msp\identities.go No.174 line
 	if err != nil {
 		return nil, errors.WithMessage(err, fmt.Sprintf("error serializing identity for %s", signer.GetIdentifier()))
 	}
